@@ -22,21 +22,21 @@ func _ready() -> void:
 
 ## 更新回合计数
 func update_turn(turn: int) -> void:
-	var label = get_node_or_null("TopBar/TurnLabel")
+	var label = get_node_or_null("TopBar/HBoxContainer/TurnLabel")
 	if label:
 		label.text = "回合: %d" % turn
 
 
 ## 更新暂停按钮文本
 func update_pause_button(is_paused: bool) -> void:
-	var btn = get_node_or_null("TopBar/PauseButton")
+	var btn = get_node_or_null("TopBar/HBoxContainer/PauseButton")
 	if btn:
-		btn.text = "继续" if is_paused else "暂停"
+		btn.text = "▶ 继续" if is_paused else "⏸ 暂停"
 
 
 ## 更新速度按钮文本
 func update_speed_button(speed: float) -> void:
-	var btn = get_node_or_null("TopBar/SpeedButton")
+	var btn = get_node_or_null("TopBar/HBoxContainer/SpeedButton")
 	if btn:
 		btn.text = "%dx" % int(speed)
 

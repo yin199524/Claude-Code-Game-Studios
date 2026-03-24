@@ -116,6 +116,7 @@ func _create_unit_buttons() -> void:
 func _connect_signals() -> void:
 	$BottomBar/ClearButton.pressed.connect(_on_clear_pressed)
 	$BottomBar/StartButton.pressed.connect(_on_start_pressed)
+	$Header/HBoxContainer/BackButton.pressed.connect(_on_back_pressed)
 
 
 ## 绘制网格线
@@ -287,6 +288,11 @@ func _on_start_pressed() -> void:
 
 	# 切换到战斗场景
 	get_tree().change_scene_to_file("res://scenes/battle/battle_scene.tscn")
+
+
+## 返回按钮
+func _on_back_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/level/level_select.tscn")
 
 
 ## 保存布局供战斗使用

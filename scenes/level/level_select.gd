@@ -23,13 +23,13 @@ func _connect_signals() -> void:
 
 ## 更新金币显示
 func _update_gold_display() -> void:
-	var label = $VBoxContainer/Header/GoldLabel
-	label.text = "💰 %d" % SaveManager.get_gold()
+	var label = $VBoxContainer/Header/GoldDisplay/GoldLabel
+	label.text = "%d" % SaveManager.get_gold()
 
 
 ## 填充关卡列表
 func _populate_level_list() -> void:
-	var list = $VBoxContainer/LevelList
+	var list = $VBoxContainer/LevelList/LevelListContent
 
 	# 清空现有按钮
 	for child in list.get_children():
@@ -49,72 +49,113 @@ func _populate_level_list() -> void:
 
 ## 创建关卡按钮
 func _create_level_button(level: LevelDefinition) -> Control:
+	# 外层容器（用于边框和阴影）
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size.y = 100
+
+	var is_unlocked = LevelDatabase.is_level_unlocked(level.id)
+	var is_completed = LevelDatabase.is_level_completed(level.id)
+
+	# 创建样式
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.18, 0.22, 0.3, 1) if is_unlocked else Color(0.12, 0.14, 0.18, 1)
+	style.border_color = Color(0.4, 0.5, 0.65, 1) if is_unlocked else Color(0.2, 0.25, 0.3, 1)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(10)
+	style.shadow_color = Color(0, 0, 0, 0.25)
+	style.shadow_size = 4
+	style.shadow_offset = Vector2(2, 2)
+	panel.add_theme_stylebox_override("panel", style)
+
+	# 内层容器
 	var container = HBoxContainer.new()
-	container.custom_minimum_size.y = 80
+	panel.add_child(container)
 
-	# 背景
-	var bg = ColorRect.new()
-	bg.color = Color(0.2, 0.2, 0.25, 1)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	container.add_child(bg)
+	# 左侧：关卡编号
+	var number_panel = PanelContainer.new()
+	number_panel.custom_minimum_size.x = 60
+	var number_style = StyleBoxFlat.new()
+	number_style.bg_color = Color(0.25, 0.3, 0.4, 1) if is_unlocked else Color(0.15, 0.18, 0.22, 1)
+	number_style.set_corner_radius_all(8)
+	number_panel.add_theme_stylebox_override("panel", number_style)
+	container.add_child(number_panel)
 
-	# 关卡信息容器
+	var number_label = Label.new()
+	number_label.text = str(level.difficulty)
+	number_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	number_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	number_label.add_theme_font_size_override("font_size", 32)
+	number_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 1) if is_unlocked else Color(0.4, 0.45, 0.5, 1))
+	number_panel.add_child(number_label)
+
+	# 中间：关卡信息
 	var info = VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_constant_override("separation", 4)
 	container.add_child(info)
 
 	# 关卡名称
 	var name_label = Label.new()
 	name_label.text = level.display_name
-	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_font_size_override("font_size", 20)
+	name_label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95, 1) if is_unlocked else Color(0.5, 0.55, 0.6, 1))
 	info.add_child(name_label)
 
 	# 关卡描述
 	var desc_label = Label.new()
 	desc_label.text = level.description
 	desc_label.add_theme_font_size_override("font_size", 12)
-	desc_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	desc_label.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7, 1) if is_unlocked else Color(0.35, 0.4, 0.45, 1))
 	info.add_child(desc_label)
 
 	# 难度和奖励
-	var stats_label = Label.new()
-	stats_label.text = "难度: %d | 敌人: %d | 奖励: %d 金币" % [
-		level.difficulty,
-		level.get_enemy_count(),
-		level.gold_reward
-	]
-	stats_label.add_theme_font_size_override("font_size", 12)
-	info.add_child(stats_label)
+	var stats_hbox = HBoxContainer.new()
+	stats_hbox.add_theme_constant_override("separation", 15)
+	info.add_child(stats_hbox)
 
-	# 状态标签
+	var enemy_stat = Label.new()
+	enemy_stat.text = "敌人: %d" % level.get_enemy_count()
+	enemy_stat.add_theme_font_size_override("font_size", 12)
+	enemy_stat.add_theme_color_override("font_color", Color(0.9, 0.5, 0.5, 1) if is_unlocked else Color(0.4, 0.4, 0.45, 1))
+	stats_hbox.add_child(enemy_stat)
+
+	var reward_stat = Label.new()
+	reward_stat.text = "奖励: %d 金币" % level.gold_reward
+	reward_stat.add_theme_font_size_override("font_size", 12)
+	reward_stat.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1) if is_unlocked else Color(0.4, 0.4, 0.45, 1))
+	stats_hbox.add_child(reward_stat)
+
+	# 右侧：状态
+	var status_container = VBoxContainer.new()
+	status_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	status_container.custom_minimum_size.x = 90
+	container.add_child(status_container)
+
 	var status_label = Label.new()
-	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	status_label.custom_minimum_size.x = 80
-
-	var is_unlocked = LevelDatabase.is_level_unlocked(level.id)
-	var is_completed = LevelDatabase.is_level_completed(level.id)
+	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status_label.add_theme_font_size_override("font_size", 16)
 
 	if is_completed:
-		status_label.text = "✅ 完成"
-		status_label.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2))
+		status_label.text = "✓ 已完成"
+		status_label.add_theme_color_override("font_color", Color(0.2, 0.85, 0.3, 1))
 	elif is_unlocked:
 		status_label.text = "▶ 开始"
-		status_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.2))
+		status_label.add_theme_color_override("font_color", Color(0.3, 0.8, 0.9, 1))
 	else:
 		status_label.text = "🔒 锁定"
-		status_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		status_label.add_theme_color_override("font_color", Color(0.4, 0.45, 0.5, 1))
 
-	container.add_child(status_label)
+	status_container.add_child(status_label)
 
 	# 点击事件
 	if is_unlocked:
-		container.gui_input.connect(func(event):
+		panel.gui_input.connect(func(event):
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 				_on_level_selected(level.id)
 		)
+		panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
-	return container
+	return panel
 
 
 ## 关卡选中

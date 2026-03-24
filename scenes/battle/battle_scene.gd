@@ -104,12 +104,12 @@ func _setup_battle_manager() -> void:
 ## 连接 HUD 信号
 func _connect_hud_signals() -> void:
 	var hud = $HUD
-	if hud.has_node("TopBar/PauseButton"):
-		var pause_btn = hud.get_node("TopBar/PauseButton")
+	if hud.has_node("TopBar/HBoxContainer/PauseButton"):
+		var pause_btn = hud.get_node("TopBar/HBoxContainer/PauseButton")
 		pause_btn.pressed.connect(_on_pause_pressed)
 
-	if hud.has_node("TopBar/SpeedButton"):
-		var speed_btn = hud.get_node("TopBar/SpeedButton")
+	if hud.has_node("TopBar/HBoxContainer/SpeedButton"):
+		var speed_btn = hud.get_node("TopBar/HBoxContainer/SpeedButton")
 		speed_btn.pressed.connect(_on_speed_pressed)
 
 	var result_panel = hud.get_node("ResultPanel")
@@ -215,8 +215,8 @@ func _on_unit_removed(unit: UnitInstance, position: Vector2i) -> void:
 ## 回合完成回调
 func _on_turn_completed(turn_number: int) -> void:
 	var hud = $HUD
-	if hud.has_node("TopBar/TurnLabel"):
-		var label = hud.get_node("TopBar/TurnLabel")
+	if hud.has_node("TopBar/HBoxContainer/TurnLabel"):
+		var label = hud.get_node("TopBar/HBoxContainer/TurnLabel")
 		label.text = "回合: %d" % turn_number
 
 
@@ -255,14 +255,19 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	# 更新 UI
 	var hud = $HUD
 	var result_panel = hud.get_node("ResultPanel")
+	var icon_label = result_panel.get_node("VBoxContainer/IconLabel")
 	var result_label = result_panel.get_node("VBoxContainer/ResultLabel")
 	var reward_label = result_panel.get_node("VBoxContainer/RewardLabel")
 
 	if victory:
+		icon_label.text = "🏆"
 		result_label.text = "战斗胜利!"
+		result_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3, 1))
 		reward_label.text = "获得金币: %d" % rewards.get("gold", 0)
 	else:
+		icon_label.text = "💔"
 		result_label.text = "战斗失败..."
+		result_label.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4, 1))
 		reward_label.text = "再接再厉!"
 
 	result_panel.visible = true
@@ -374,20 +379,20 @@ func _show_damage_number(position: Vector2i, damage: int, is_heal: bool) -> void
 ## 暂停按钮回调
 func _on_pause_pressed() -> void:
 	var hud = $HUD
-	var pause_btn = hud.get_node("TopBar/PauseButton")
+	var pause_btn = hud.get_node("TopBar/HBoxContainer/PauseButton")
 
 	if battle_manager.is_paused:
 		battle_manager.resume_battle()
-		pause_btn.text = "暂停"
+		pause_btn.text = "⏸ 暂停"
 	else:
 		battle_manager.pause_battle()
-		pause_btn.text = "继续"
+		pause_btn.text = "▶ 继续"
 
 
 ## 速度按钮回调
 func _on_speed_pressed() -> void:
 	var hud = $HUD
-	var speed_btn = hud.get_node("TopBar/SpeedButton")
+	var speed_btn = hud.get_node("TopBar/HBoxContainer/SpeedButton")
 
 	var new_speed: float
 	var new_text: String
