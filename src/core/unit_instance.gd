@@ -14,6 +14,9 @@ var level: int = 1
 ## 当前生命值
 var current_hp: int
 
+## 协同加成（战斗开始时计算）
+var synergy_bonuses: Dictionary = {}
+
 ## 网格位置
 var grid_position: Vector2i
 
@@ -74,9 +77,11 @@ func get_class_type() -> Global.ClassType:
 	return definition.class_type
 
 
-## 获取最大生命值（应用等级加成）
+## 获取最大生命值（应用等级和协同加成）
 func get_max_hp() -> int:
-	return definition.get_hp_at_level(level)
+	var base_hp = definition.get_hp_at_level(level)
+	var hp_bonus = synergy_bonuses.get("hp", 0.0)
+	return int(base_hp * (1.0 + hp_bonus))
 
 
 ## 获取当前生命值百分比
@@ -130,3 +135,43 @@ func get_info_string() -> String:
 		get_max_hp(),
 		grid_position
 	]
+
+
+## 设置协同加成
+func set_synergy_bonuses(bonuses: Dictionary) -> void:
+	synergy_bonuses = bonuses
+	# 应用 HP 加成时需要更新当前 HP 比例
+	if bonuses.has("hp") and bonuses["hp"] > 0:
+		var old_max = get_max_hp()
+		var hp_ratio = float(current_hp) / float(old_max) if old_max > 0 else 1.0
+		# HP 加成会影响基础 HP，在 get_max_hp 中应用
+		current_hp = int(get_max_hp() * hp_ratio)
+
+
+## 获取协同加成后的攻击力
+func get_synergy_attack() -> int:
+	var base_attack = definition.get_attack_at_level(level)
+	var bonus = synergy_bonuses.get("attack", 0.0)
+	return int(base_attack * (1.0 + bonus))
+
+
+## 获取协同加成后的护甲
+func get_synergy_armor() -> int:
+	var base_armor = definition.get_armor_at_level(level)
+	var bonus = synergy_bonuses.get("defense", 0.0)
+	return int(base_armor * (1.0 + bonus))
+
+
+## 获取协同伤害加成
+func get_synergy_damage_bonus() -> float:
+	return synergy_bonuses.get("damage", 0.0)
+
+
+## 获取协同治疗加成
+func get_synergy_heal_bonus() -> float:
+	return synergy_bonuses.get("heal", 0.0)
+
+
+## 获取协同 HP 加成
+func get_synergy_hp_bonus() -> float:
+	return synergy_bonuses.get("hp", 0.0)

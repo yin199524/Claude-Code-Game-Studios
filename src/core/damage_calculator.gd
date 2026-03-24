@@ -101,13 +101,47 @@ static func calculate_damage(attacker: UnitDefinition, defender: UnitDefinition,
 	return result.final_damage
 
 
-## 从 UnitInstance 计算伤害（自动应用等级）
+## 从 UnitInstance 计算伤害（自动应用等级和协同加成）
 ## attacker: 攻击者单位实例
 ## defender: 防御者单位实例
 ## use_random: 是否应用随机波动
 ## 返回: DamageResult 对象
 static func calculate_from_instances(attacker: UnitInstance, defender: UnitInstance, use_random: bool = true) -> DamageResult:
-	return calculate(attacker.definition, defender.definition, use_random, -1, attacker.level, defender.level)
+	# 使用协同增强后的属性
+	var result = DamageResult.new()
+
+	# 1. 使用协同增强后的攻击力
+	result.base_damage = float(attacker.get_synergy_attack())
+
+	# 2. 使用协同增强后的护甲
+	var defender_armor = float(defender.get_synergy_armor())
+
+	# 3. 计算护甲减伤
+	var armor_percent_reduction: float = defender_armor / (defender_armor + ARMOR_SCALING_CONSTANT)
+	var armor_flat_reduction: float = defender_armor * ARMOR_FLAT_RATIO
+	result.armor_reduction = armor_percent_reduction + armor_flat_reduction / result.base_damage if result.base_damage > 0 else 0.0
+
+	# 4. 应用护甲减伤后的伤害
+	var pre_random_damage: float = result.base_damage * (1.0 - armor_percent_reduction) - armor_flat_reduction
+
+	# 5. 检查克制关系
+	result.counter_status = Global.get_counter_status(attacker.get_class_type(), defender.get_class_type())
+	result.counter_multiplier = Global.get_counter_multiplier(attacker.get_class_type(), defender.get_class_type())
+
+	# 6. 应用克制加成
+	var pre_random_total: float = pre_random_damage * result.counter_multiplier
+
+	# 7. 应用随机波动
+	if use_random:
+		result.random_factor = randf_range(RANDOM_RANGE_MIN, RANDOM_RANGE_MAX)
+	else:
+		result.random_factor = 1.0
+
+	# 8. 计算最终伤害（最小为1）
+	var final_raw: float = pre_random_total * result.random_factor
+	result.final_damage = maxi(floori(final_raw), MIN_DAMAGE)
+
+	return result
 
 
 ## 检查是否存在克制关系

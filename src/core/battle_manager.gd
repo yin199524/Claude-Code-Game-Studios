@@ -10,6 +10,7 @@ signal turn_completed(turn_number: int)
 signal unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int, counter_status: int)
 signal unit_died(unit: UnitInstance)
 signal battle_ended(victory: bool, rewards: Dictionary)
+signal synergies_activated(synergy_names: Array[String])
 
 ## 常量
 const MAX_TURNS: int = 100
@@ -36,6 +37,12 @@ var grid_layout: GridLayout = null
 ## 状态机
 var state_machine: BattleStateMachine = null
 
+## 协同管理器
+var synergy_manager: SynergyManager = null
+
+## 当前激活的协同
+var active_synergies: Array = []
+
 ## 战斗开始时间
 var battle_start_time: float = 0.0
 
@@ -48,6 +55,7 @@ func initialize(layout: GridLayout) -> void:
 	grid_layout = layout
 	state_machine = BattleStateMachine.new()
 	state_machine.state_changed.connect(_on_state_changed)
+	synergy_manager = SynergyManager.new()
 
 
 ## 开始战斗
@@ -69,6 +77,9 @@ func start_battle() -> void:
 		unit.is_alive = true
 		unit.current_target = null
 		unit.target_lock_timer = 0.0
+
+	# 检测并应用协同效果（仅玩家单位）
+	_apply_synergies()
 
 
 ## 更新战斗（每帧调用）
@@ -243,8 +254,12 @@ func _execute_attack(attacker: UnitInstance, target: UnitInstance) -> void:
 	# 计算伤害（应用等级加成）
 	var result = DamageCalculator.calculate_from_instances(attacker, target, true)
 
+	# 应用协同伤害加成
+	var damage_bonus = attacker.get_synergy_damage_bonus()
+	var final_damage = int(result.final_damage * (1.0 + damage_bonus))
+
 	# 应用伤害
-	var actual_damage = target.take_damage(result.final_damage)
+	var actual_damage = target.take_damage(final_damage)
 	unit_attacked.emit(attacker, target, actual_damage, result.counter_status)
 
 	# 检查死亡
@@ -254,8 +269,10 @@ func _execute_attack(attacker: UnitInstance, target: UnitInstance) -> void:
 
 ## 执行治疗
 func _heal_target(healer: UnitInstance, target: UnitInstance) -> void:
-	# 治疗量为攻击力的一定比例（应用等级加成）
-	var heal_amount = int(healer.definition.get_attack_at_level(healer.level) * 0.5)
+	# 治疗量为攻击力的一定比例（应用等级加成和协同加成）
+	var base_heal = healer.definition.get_attack_at_level(healer.level) * 0.5
+	var heal_bonus = healer.get_synergy_heal_bonus()
+	var heal_amount = int(base_heal * (1.0 + heal_bonus))
 	var actual_heal = target.heal(heal_amount)
 
 	# 发送攻击信号用于 UI 显示（治疗也是"攻击"的一种，克制状态为 0）
@@ -358,3 +375,29 @@ func _compare_unit_order(a: UnitInstance, b: UnitInstance) -> bool:
 	if a.grid_position.y != b.grid_position.y:
 		return a.grid_position.y < b.grid_position.y
 	return a.grid_position.x < b.grid_position.x
+
+
+## 检测并应用协同效果
+func _apply_synergies() -> void:
+	var player_units = grid_layout.get_player_units()
+	if player_units.is_empty():
+		return
+
+	# 检测激活的协同
+	active_synergies = synergy_manager.detect_synergies(player_units, grid_layout)
+
+	if active_synergies.is_empty():
+		return
+
+	# 收集协同名称用于 UI 显示
+	var synergy_names: Array[String] = []
+	for synergy in active_synergies:
+		synergy_names.append(synergy.display_name)
+
+	# 为每个玩家单位计算并应用协同加成
+	for unit in player_units:
+		var bonuses = synergy_manager.calculate_synergy_bonuses(unit, active_synergies)
+		unit.set_synergy_bonuses(bonuses)
+
+	# 发送协同激活信号
+	synergies_activated.emit(synergy_names)
