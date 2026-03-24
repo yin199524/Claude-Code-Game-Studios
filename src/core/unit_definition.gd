@@ -82,6 +82,52 @@ func get_effective_armor() -> int:
 	return int(armor * Global.RARITY_MULTIPLIERS[rarity])
 
 
+## 获取指定等级的生命值（应用升级加成）
+## level: 单位等级 (1-10)
+## 公式: hp × RARITY_MULTIPLIER × (1 + (level-1) × 0.1)
+func get_hp_at_level(level: int) -> int:
+	var level_bonus = 1.0 + (level - 1) * Global.ATTRIBUTE_BONUS_PER_LEVEL
+	return int(hp * Global.RARITY_MULTIPLIERS[rarity] * level_bonus)
+
+
+## 获取指定等级的攻击力（应用升级加成）
+## level: 单位等级 (1-10)
+func get_attack_at_level(level: int) -> int:
+	var level_bonus = 1.0 + (level - 1) * Global.ATTRIBUTE_BONUS_PER_LEVEL
+	return int(attack * Global.RARITY_MULTIPLIERS[rarity] * level_bonus)
+
+
+## 获取指定等级的护甲（应用升级加成）
+## level: 单位等级 (1-10)
+func get_armor_at_level(level: int) -> int:
+	var level_bonus = 1.0 + (level - 1) * Global.ATTRIBUTE_BONUS_PER_LEVEL
+	return int(armor * Global.RARITY_MULTIPLIERS[rarity] * level_bonus)
+
+
+## 计算升级费用
+## current_level: 当前等级 (1-9)
+## 公式: floor(base_price × current_level × 0.5 × rarity_price_multiplier)
+func get_upgrade_cost(current_level: int) -> int:
+	if current_level >= Global.MAX_UNIT_LEVEL:
+		return 0  # 已满级
+	return int(base_price * current_level * Global.UPGRADE_COST_MULTIPLIER * Global.RARITY_PRICE_MULTIPLIERS[rarity])
+
+
+## 获取升级后的属性预览
+## current_level: 当前等级
+## 返回: {hp, attack, armor, cost}
+func get_upgrade_preview(current_level: int) -> Dictionary:
+	if current_level >= Global.MAX_UNIT_LEVEL:
+		return {"hp": get_hp_at_level(current_level), "attack": get_attack_at_level(current_level), "armor": get_armor_at_level(current_level), "cost": 0, "max_level": true}
+	return {
+		"hp": get_hp_at_level(current_level + 1),
+		"attack": get_attack_at_level(current_level + 1),
+		"armor": get_armor_at_level(current_level + 1),
+		"cost": get_upgrade_cost(current_level),
+		"max_level": false
+	}
+
+
 ## 获取商店价格（应用稀有度价格倍率）
 ## 公式: price = base_price × RARITY_PRICE_MULTIPLIER[rarity]
 func get_price() -> int:

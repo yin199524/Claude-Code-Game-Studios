@@ -8,6 +8,9 @@ extends RefCounted
 ## 单位定义引用
 var definition: UnitDefinition
 
+## 单位等级 (1-10)
+var level: int = 1
+
 ## 当前生命值
 var current_hp: int
 
@@ -31,10 +34,15 @@ var target_lock_timer: float = 0.0
 
 
 ## 从单位定义创建实例
-static func create(unit_def: UnitDefinition, position: Vector2i, player_unit: bool = true) -> UnitInstance:
+## unit_def: 单位定义
+## position: 网格位置
+## player_unit: 是否为玩家单位
+## unit_level: 单位等级 (默认 1)
+static func create(unit_def: UnitDefinition, position: Vector2i, player_unit: bool = true, unit_level: int = 1) -> UnitInstance:
 	var instance = UnitInstance.new()
 	instance.definition = unit_def
-	instance.current_hp = unit_def.get_effective_hp()
+	instance.level = clampi(unit_level, 1, Global.MAX_UNIT_LEVEL)
+	instance.current_hp = unit_def.get_hp_at_level(instance.level)
 	instance.grid_position = position
 	instance.is_player_unit = player_unit
 	instance.attack_cooldown = 0.0
@@ -66,9 +74,9 @@ func get_class_type() -> Global.ClassType:
 	return definition.class_type
 
 
-## 获取最大生命值
+## 获取最大生命值（应用等级加成）
 func get_max_hp() -> int:
-	return definition.get_effective_hp()
+	return definition.get_hp_at_level(level)
 
 
 ## 获取当前生命值百分比
@@ -115,8 +123,9 @@ func can_attack() -> bool:
 
 ## 获取单位信息字符串
 func get_info_string() -> String:
-	return "%s HP:%d/%d 位置:%s" % [
+	return "%s Lv.%d HP:%d/%d 位置:%s" % [
 		definition.display_name,
+		level,
 		current_hp,
 		get_max_hp(),
 		grid_position

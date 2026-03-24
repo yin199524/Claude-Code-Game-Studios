@@ -77,3 +77,31 @@ static func create_purchase_particles(parent: Node, position: Vector2) -> void:
 		tween.tween_property(particle, "position", position + Vector2(cos(angle) * (radius + 30), sin(angle) * (radius + 30)), 0.5)
 		tween.tween_property(particle, "modulate:a", 0.0, 0.5)
 		tween.chain().tween_callback(particle.queue_free)
+
+
+## 创建升级粒子效果
+static func create_upgrade_particles(parent: Node, position: Vector2, count: int = 25) -> void:
+	for i in range(count):
+		var particle = ColorRect.new()
+		# 金色到黄色的渐变
+		particle.color = Color(1.0, 0.8 + randf() * 0.2, randf() * 0.3, 1.0)
+		particle.size = Vector2(randf_range(5, 12), randf_range(5, 12))
+
+		# 从中心向外扩散
+		var angle = randf() * PI * 2
+		var start_radius = randf_range(5, 20)
+		var end_radius = randf_range(60, 120)
+
+		particle.position = position + Vector2(cos(angle) * start_radius, sin(angle) * start_radius)
+		particle.z_index = 200
+
+		parent.add_child(particle)
+
+		var tween = parent.create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(particle, "position", position + Vector2(cos(angle) * end_radius, sin(angle) * end_radius), randf_range(0.6, 1.0)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.tween_property(particle, "modulate:a", 0.0, randf_range(0.4, 0.8)).set_delay(0.2)
+		tween.tween_property(particle, "rotation", randf_range(-PI/2, PI/2), randf_range(0.6, 1.0))
+		tween.tween_property(particle, "size", Vector2(2, 2), randf_range(0.4, 0.8))
+
+		tween.chain().tween_callback(particle.queue_free)

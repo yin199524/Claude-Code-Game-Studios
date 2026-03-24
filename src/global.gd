@@ -47,6 +47,12 @@ const MAX_ATTACK_RANGE: int = 10
 const MAX_ARMOR: int = 100
 const MAX_MOVE_SPEED: float = 5.0
 
+## 单位升级系统常量
+## 参考: design/gdd/unit-upgrade-system.md
+const MAX_UNIT_LEVEL: int = 10                    ## 等级上限
+const ATTRIBUTE_BONUS_PER_LEVEL: float = 0.1     ## 每级属性增幅 (10%)
+const UPGRADE_COST_MULTIPLIER: float = 0.5       ## 升级费用系数
+
 ## 克制系统常量
 ## 参考: design/gdd/counter-system.md
 const COUNTER_MULTIPLIER: float = 1.3      ## 克制方伤害加成

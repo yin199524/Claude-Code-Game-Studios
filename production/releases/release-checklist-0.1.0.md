@@ -1,9 +1,10 @@
-# Release Checklist: v0.1.0 — Vertical Slice
+# Release Checklist: v0.1.0 — Alpha Milestone
 
-**Generated**: 2026-03-24
+**Generated**: 2026-03-25
 **Platform**: All (Mobile Primary)
 **Game**: Zen Legion (禅意军团)
 **Engine**: Godot 4.6
+**Target Milestone**: Alpha
 
 ---
 
@@ -70,13 +71,25 @@
 - [x] 关卡系统 (3 levels)
 - [x] 商店系统
 
-### Vertical Slice Systems (In Progress)
-- [ ] 存档系统完善 — 多存档槽支持
-- [ ] 克制系统 — 职业间相克机制
-- [ ] 关卡解锁系统 — 顺序解锁
-- [ ] 布局编辑 UI 增强
-- [ ] 战斗 UI 增强
-- [ ] 扩展到 5 个关卡
+### Vertical Slice Systems (Complete ✓)
+- [x] 存档系统完善 — 多存档槽支持
+- [x] 克制系统 — 职业间相克机制
+- [x] 关卡解锁系统 — 顺序解锁
+- [x] 布局编辑 UI 增强
+- [x] 战斗 UI 增强
+- [x] 扩展到 5 个关卡
+
+### Alpha Systems (Not Started)
+- [ ] 单位升级系统 — 使用金币提升单位属性
+- [ ] 单位协同系统 — 特定单位组合获得加成 (3+ 协同效果)
+- [ ] 进度系统 — 长期成长目标
+- [ ] 主菜单 UI 增强
+- [ ] 商店 UI 增强
+
+### Alpha Content Expansion
+- [ ] 15+ 可玩单位 (当前 5)
+- [ ] 12+ 敌人类型 (当前 7)
+- [ ] 20 关卡 / 4 世界 (当前 5 关卡)
 
 ### Content Requirements
 - [ ] All placeholder assets replaced with final versions
@@ -170,20 +183,22 @@
 
 **Rationale:**
 
-Vertical Slice 里程碑尚未完成。以下项目必须先解决：
+Vertical Slice 已完成 (Sprint 5-6)，项目现已进入 Alpha 里程碑规划阶段。
+Alpha 里程碑尚未开始，以下系统必须实现：
 
-| Blocker | Priority | Status |
-|---------|----------|--------|
-| 克制系统未实现 | High | Sprint 5 进行中 |
-| 关卡解锁系统待完善 | High | Sprint 5 进行中 |
-| 存档系统待完善 | Medium | Sprint 6 计划 |
-| UI 反馈待增强 | Medium | Sprint 5-6 计划 |
-| 需扩展到 5 个关卡 | Medium | Sprint 5 计划 |
+| Blocker | Priority | Sprint Plan |
+|---------|----------|-------------|
+| 单位升级系统 | High | Sprint 7 |
+| 单位协同系统 | High | Sprint 8 |
+| 世界地图系统 | High | Sprint 8 |
+| 内容扩展 (15单位, 20关卡) | Medium | Sprint 9 |
+| 成就系统 + UI 完善 | Medium | Sprint 10 |
+| 平衡调整 + Bug 修复 | Medium | Sprint 11 |
 
 **Known Issues:**
 - 1 TODO (音效占位符) — 非阻塞
 
-**Estimated Readiness:** Sprint 6 完成后 (约 2026-04-07)
+**Estimated Readiness:** Sprint 11 完成后 (约 2026-05-15)
 
 ---
 
@@ -202,10 +217,13 @@ Vertical Slice 里程碑尚未完成。以下项目必须先解决：
 |----------|-------------|-----------|---------|
 | Build Verification | 6 | 0 | 0 |
 | Quality Gates | 7 | 0 | 0 |
-| Content Complete | 12 | 11 | 5 |
+| Content Complete (MVP) | 12 | 11 | 0 |
+| Content Complete (Alpha) | 10 | 0 | 5 |
 | Mobile Platform | 10 | 0 | 0 |
 | PC Platform | 10 | 0 | 0 |
 | Console Platform | 9 | 0 | 0 |
 | Store/Distribution | 11 | 0 | 0 |
 | Launch Readiness | 8 | 0 | 0 |
-| **Total** | **73** | **11** | **5** |
+| **Total** | **83** | **11** | **5** |
+
+**Overall Status**: MVP complete, Alpha milestone planned but not started

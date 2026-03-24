@@ -40,15 +40,24 @@ class DamageResult:
 ## defender: 防御者的单位定义
 ## use_random: 是否应用随机波动（默认true，回放时设为false）
 ## random_seed: 随机种子（用于回放，可选）
+## attacker_level: 攻击者等级（可选，默认0表示不应用等级加成）
+## defender_level: 防御者等级（可选，默认0表示不应用等级加成）
 ## 返回: DamageResult 对象
-static func calculate(attacker: UnitDefinition, defender: UnitDefinition, use_random: bool = true, random_seed: int = -1) -> DamageResult:
+static func calculate(attacker: UnitDefinition, defender: UnitDefinition, use_random: bool = true, random_seed: int = -1, attacker_level: int = 0, defender_level: int = 0) -> DamageResult:
 	var result = DamageResult.new()
 
-	# 1. 计算基础伤害（应用稀有度加成）
-	result.base_damage = float(attacker.get_effective_attack())
+	# 1. 计算基础伤害（应用稀有度加成和等级加成）
+	if attacker_level > 0:
+		result.base_damage = float(attacker.get_attack_at_level(attacker_level))
+	else:
+		result.base_damage = float(attacker.get_effective_attack())
 
-	# 2. 获取防御者护甲
-	var defender_armor: float = float(defender.get_effective_armor())
+	# 2. 获取防御者护甲（应用等级加成）
+	var defender_armor: float
+	if defender_level > 0:
+		defender_armor = float(defender.get_armor_at_level(defender_level))
+	else:
+		defender_armor = float(defender.get_effective_armor())
 
 	# 3. 计算护甲减伤
 	# 百分比减伤: armor / (armor + ARMOR_SCALING_CONSTANT)
@@ -90,6 +99,15 @@ static func calculate(attacker: UnitDefinition, defender: UnitDefinition, use_ra
 static func calculate_damage(attacker: UnitDefinition, defender: UnitDefinition, use_random: bool = true) -> int:
 	var result = calculate(attacker, defender, use_random)
 	return result.final_damage
+
+
+## 从 UnitInstance 计算伤害（自动应用等级）
+## attacker: 攻击者单位实例
+## defender: 防御者单位实例
+## use_random: 是否应用随机波动
+## 返回: DamageResult 对象
+static func calculate_from_instances(attacker: UnitInstance, defender: UnitInstance, use_random: bool = true) -> DamageResult:
+	return calculate(attacker.definition, defender.definition, use_random, -1, attacker.level, defender.level)
 
 
 ## 检查是否存在克制关系

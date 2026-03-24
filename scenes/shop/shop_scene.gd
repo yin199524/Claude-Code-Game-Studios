@@ -177,6 +177,19 @@ func _create_unit_item(unit: UnitDefinition) -> Control:
 	rarity_label.add_theme_color_override("font_color", _get_rarity_color(unit.rarity))
 	name_row.add_child(rarity_label)
 
+	# 检查是否已拥有
+	var is_owned = SaveManager.has_unit(unit.id)
+	var unit_level = SaveManager.get_unit_level(unit.id) if is_owned else 0
+	var is_max_level = unit_level >= Global.MAX_UNIT_LEVEL
+
+	# 等级显示（仅已拥有单位）
+	if is_owned:
+		var level_label = Label.new()
+		level_label.text = "Lv.%d%s" % [unit_level, " MAX" if is_max_level else ""]
+		level_label.add_theme_font_size_override("font_size", 12)
+		level_label.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1) if is_max_level else Color(0.7, 0.8, 0.9, 1))
+		name_row.add_child(level_label)
+
 	# 职业类型
 	var class_label = Label.new()
 	class_label.text = Global.get_class_name(unit.class_type)
@@ -189,14 +202,18 @@ func _create_unit_item(unit: UnitDefinition) -> Control:
 	stats_hbox.add_theme_constant_override("separation", 15)
 	info.add_child(stats_hbox)
 
+	# 显示当前等级属性或基础属性
+	var display_hp = unit.get_hp_at_level(maxi(unit_level, 1))
+	var display_atk = unit.get_attack_at_level(maxi(unit_level, 1))
+
 	var hp_stat = Label.new()
-	hp_stat.text = "❤ %d" % unit.get_effective_hp()
+	hp_stat.text = "❤ %d" % display_hp
 	hp_stat.add_theme_font_size_override("font_size", 12)
 	hp_stat.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4, 1))
 	stats_hbox.add_child(hp_stat)
 
 	var atk_stat = Label.new()
-	atk_stat.text = "⚔ %d" % unit.get_effective_attack()
+	atk_stat.text = "⚔ %d" % display_atk
 	atk_stat.add_theme_font_size_override("font_size", 12)
 	atk_stat.add_theme_color_override("font_color", Color(0.9, 0.7, 0.3, 1))
 	stats_hbox.add_child(atk_stat)
@@ -207,38 +224,79 @@ func _create_unit_item(unit: UnitDefinition) -> Control:
 	range_stat.add_theme_color_override("font_color", Color(0.5, 0.7, 0.9, 1))
 	stats_hbox.add_child(range_stat)
 
-	# 右侧：价格和购买按钮
+	# 右侧：价格和按钮
 	var price_container = VBoxContainer.new()
 	price_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	price_container.custom_minimum_size.x = 90
 	container.add_child(price_container)
 
-	var price_label = Label.new()
-	price_label.text = "%d" % unit.get_price()
-	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	price_label.add_theme_font_size_override("font_size", 18)
-	price_label.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
-	price_container.add_child(price_label)
+	if is_owned:
+		# 已拥有单位：显示升级选项
+		if is_max_level:
+			# 已满级
+			var max_label = Label.new()
+			max_label.text = "已满级"
+			max_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			max_label.add_theme_font_size_override("font_size", 14)
+			max_label.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+			price_container.add_child(max_label)
+		else:
+			# 显示升级费用
+			var upgrade_cost = unit.get_upgrade_cost(unit_level)
+			var price_label = Label.new()
+			price_label.text = "%d" % upgrade_cost
+			price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			price_label.add_theme_font_size_override("font_size", 16)
+			price_label.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+			price_container.add_child(price_label)
 
-	var price_icon = Label.new()
-	price_icon.text = "金币"
-	price_icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	price_icon.add_theme_font_size_override("font_size", 10)
-	price_icon.add_theme_color_override("font_color", Color(0.7, 0.65, 0.5, 1))
-	price_container.add_child(price_icon)
+			var price_icon = Label.new()
+			price_icon.text = "升级费用"
+			price_icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			price_icon.add_theme_font_size_override("font_size", 10)
+			price_icon.add_theme_color_override("font_color", Color(0.7, 0.65, 0.5, 1))
+			price_container.add_child(price_icon)
 
-	var buy_button = Button.new()
-	buy_button.text = "购买"
-	buy_button.custom_minimum_size = Vector2(75, 32)
+			var upgrade_button = Button.new()
+			upgrade_button.text = "升级"
+			upgrade_button.custom_minimum_size = Vector2(75, 32)
 
-	# 检查是否买得起
-	var can_afford = SaveManager.can_afford(unit.get_price())
-	if not can_afford:
-		buy_button.disabled = true
-		buy_button.text = "不足"
+			# 检查是否买得起
+			var can_afford = SaveManager.can_afford(upgrade_cost)
+			if not can_afford:
+				upgrade_button.disabled = true
+				upgrade_button.text = "不足"
 
-	buy_button.pressed.connect(_on_buy_pressed.bind(unit.id, unit.get_price()))
-	price_container.add_child(buy_button)
+			upgrade_button.pressed.connect(_on_upgrade_pressed.bind(unit.id, upgrade_cost))
+			price_container.add_child(upgrade_button)
+	else:
+		# 未拥有：显示购买选项
+		var price_label = Label.new()
+		price_label.text = "%d" % unit.get_price()
+		price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		price_label.add_theme_font_size_override("font_size", 18)
+		price_label.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+		price_container.add_child(price_label)
+
+		var price_icon = Label.new()
+		price_icon.text = "金币"
+		price_icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		price_icon.add_theme_font_size_override("font_size", 10)
+		price_icon.add_theme_color_override("font_color", Color(0.7, 0.65, 0.5, 1))
+		price_container.add_child(price_icon)
+
+		var buy_button = Button.new()
+		buy_button.text = "购买"
+		buy_button.custom_minimum_size = Vector2(75, 32)
+
+		# 检查是否买得起
+		var can_afford = SaveManager.can_afford(unit.get_price())
+		if not can_afford:
+			buy_button.disabled = true
+			buy_button.text = "不足"
+
+		buy_button.pressed.connect(_on_buy_pressed.bind(unit.id, unit.get_price()))
+		price_container.add_child(buy_button)
 
 	# 添加悬停事件
 	panel.mouse_entered.connect(_on_unit_hover_entered.bind(unit, panel))
@@ -294,13 +352,30 @@ func _update_tooltip_content(unit: UnitDefinition) -> void:
 		for child in stats_container.get_children():
 			child.queue_free()
 
-		# 添加详细属性
+		# 检查是否已拥有
+		var is_owned = SaveManager.has_unit(unit.id)
+		var unit_level = SaveManager.get_unit_level(unit.id) if is_owned else 1
+
+		# 添加详细属性（显示当前等级）
 		_add_stat_row(stats_container, "职业", Global.get_class_name(unit.class_type), Color(0.6, 0.65, 0.7, 1))
-		_add_stat_row(stats_container, "生命值", "%d" % unit.get_effective_hp(), Color(0.9, 0.4, 0.4, 1))
-		_add_stat_row(stats_container, "攻击力", "%d" % unit.get_effective_attack(), Color(0.9, 0.7, 0.3, 1))
+		_add_stat_row(stats_container, "等级", "Lv.%d" % unit_level, Color(1, 0.85, 0.2, 1) if is_owned else Color(0.7, 0.7, 0.7, 1))
+		_add_stat_row(stats_container, "生命值", "%d" % unit.get_hp_at_level(unit_level), Color(0.9, 0.4, 0.4, 1))
+		_add_stat_row(stats_container, "攻击力", "%d" % unit.get_attack_at_level(unit_level), Color(0.9, 0.7, 0.3, 1))
 		_add_stat_row(stats_container, "攻击速度", "%.1f" % unit.attack_speed, Color(0.5, 0.8, 0.5, 1))
 		_add_stat_row(stats_container, "攻击范围", "%d 格" % unit.attack_range, Color(0.5, 0.7, 0.9, 1))
-		_add_stat_row(stats_container, "护甲", "%d" % unit.armor, Color(0.7, 0.7, 0.8, 1))
+		_add_stat_row(stats_container, "护甲", "%d" % unit.get_armor_at_level(unit_level), Color(0.7, 0.7, 0.8, 1))
+
+		# 如果已拥有且未满级，显示升级预览
+		if is_owned and unit_level < Global.MAX_UNIT_LEVEL:
+			var preview = unit.get_upgrade_preview(unit_level)
+			_add_stat_row(stats_container, "", "", Color(0.5, 0.5, 0.5, 1))  # 空行
+			_add_stat_row(stats_container, "升级后", "Lv.%d" % (unit_level + 1), Color(0.3, 0.9, 0.5, 1))
+			_add_stat_row(stats_container, "生命值", "%d (+%d)" % [preview.hp, preview.hp - unit.get_hp_at_level(unit_level)], Color(0.5, 0.9, 0.5, 1))
+			_add_stat_row(stats_container, "攻击力", "%d (+%d)" % [preview.attack, preview.attack - unit.get_attack_at_level(unit_level)], Color(0.5, 0.9, 0.5, 1))
+			_add_stat_row(stats_container, "护甲", "%d (+%d)" % [preview.armor, preview.armor - unit.get_armor_at_level(unit_level)], Color(0.5, 0.9, 0.5, 1))
+		elif is_owned and unit_level >= Global.MAX_UNIT_LEVEL:
+			_add_stat_row(stats_container, "", "", Color(0.5, 0.5, 0.5, 1))  # 空行
+			_add_stat_row(stats_container, "状态", "已达到最高等级", Color(1, 0.85, 0.2, 1))
 
 	# 更新技能描述
 	var skill_label = tooltip_panel.get_node("VBoxContainer/SkillDesc") as Label
@@ -409,6 +484,54 @@ func _on_buy_pressed(unit_id: String, price: int) -> void:
 
 	purchase_success.emit(unit_id)
 	print("购买成功: %s" % unit_id)
+
+
+## 升级按钮按下
+func _on_upgrade_pressed(unit_id: String, cost: int) -> void:
+	# 执行升级
+	var result = SaveManager.try_upgrade_unit(unit_id, cost)
+
+	if not result[0]:
+		SoundManager.play_sfx(SoundManager.SFX.PURCHASE_FAIL)
+		purchase_failed.emit(result[1])
+		return
+
+	# 播放升级成功音效
+	SoundManager.play_sfx(SoundManager.SFX.PURCHASE_SUCCESS)
+
+	# 显示金币飘字
+	var gold_display = $VBoxContainer/Header/GoldDisplay
+	var gold_pos = gold_display.get_global_rect().position + Vector2(30, 10)
+	SceneTransition.show_gold_floating_text(self, -cost, gold_pos)
+
+	# 显示升级特效
+	_show_upgrade_effect(unit_id)
+
+	# 刷新显示
+	_update_gold_display()
+	_populate_unit_list()
+
+	print("升级成功: %s" % unit_id)
+
+
+## 显示升级特效
+func _show_upgrade_effect(unit_id: String) -> void:
+	# 创建升级闪光效果
+	var flash = ColorRect.new()
+	flash.color = Color(1, 0.9, 0.3, 0.5)
+	flash.size = Vector2(400, 100)
+	flash.position = Vector2(160, 400)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(flash)
+
+	# 淡出动画
+	var tween = create_tween()
+	tween.tween_property(flash, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(flash.queue_free)
+
+	# 升级粒子效果
+	var particle_pos = Vector2(360, 450)
+	ParticleEffects.create_upgrade_particles(self, particle_pos)
 
 
 ## 返回按钮

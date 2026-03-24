@@ -240,8 +240,8 @@ func _execute_attack(attacker: UnitInstance, target: UnitInstance) -> void:
 		_heal_target(attacker, target)
 		return
 
-	# 计算伤害
-	var result = DamageCalculator.calculate(attacker.definition, target.definition, true)
+	# 计算伤害（应用等级加成）
+	var result = DamageCalculator.calculate_from_instances(attacker, target, true)
 
 	# 应用伤害
 	var actual_damage = target.take_damage(result.final_damage)
@@ -254,8 +254,8 @@ func _execute_attack(attacker: UnitInstance, target: UnitInstance) -> void:
 
 ## 执行治疗
 func _heal_target(healer: UnitInstance, target: UnitInstance) -> void:
-	# 治疗量为攻击力的一定比例
-	var heal_amount = int(healer.definition.get_effective_attack() * 0.5)
+	# 治疗量为攻击力的一定比例（应用等级加成）
+	var heal_amount = int(healer.definition.get_attack_at_level(healer.level) * 0.5)
 	var actual_heal = target.heal(heal_amount)
 
 	# 发送攻击信号用于 UI 显示（治疗也是"攻击"的一种，克制状态为 0）

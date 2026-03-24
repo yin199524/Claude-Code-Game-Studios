@@ -103,11 +103,12 @@ func _create_unit_buttons() -> void:
 
 	for unit_data in owned:
 		var unit_id = unit_data.get("unit_id", "")
+		var unit_level = unit_data.get("level", 1)
 		var def = UnitDatabase.get_unit(unit_id)
 		if def:
 			var btn = Button.new()
-			btn.text = def.display_name
-			btn.custom_minimum_size = Vector2(80, 40)
+			btn.text = "%s Lv.%d" % [def.display_name, unit_level]
+			btn.custom_minimum_size = Vector2(100, 40)
 			btn.pressed.connect(_on_unit_button_pressed.bind(unit_id))
 			container.add_child(btn)
 
@@ -196,10 +197,11 @@ func _place_selected_unit(grid_pos: Vector2i) -> void:
 		print("该位置已有单位")
 		return
 
-	# 创建单位实例
+	# 创建单位实例（使用单位等级）
 	var def = UnitDatabase.get_unit(selected_unit_id)
 	if def:
-		var instance = UnitInstance.create(def, grid_pos, true)
+		var unit_level = SaveManager.get_unit_level(selected_unit_id)
+		var instance = UnitInstance.create(def, grid_pos, true, unit_level)
 		grid_layout.place_unit(instance, grid_pos)
 		placed_count += 1
 
@@ -240,9 +242,9 @@ func _create_unit_visual(unit: UnitInstance) -> Node2D:
 	sprite.color = _get_unit_color(unit)
 
 	var name_label = Label.new()
-	name_label.text = unit.definition.display_name
-	name_label.position = Vector2(-30, 40)
-	name_label.add_theme_font_size_override("font_size", 12)
+	name_label.text = "%s Lv.%d" % [unit.definition.display_name, unit.level]
+	name_label.position = Vector2(-35, 40)
+	name_label.add_theme_font_size_override("font_size", 11)
 
 	node.add_child(sprite)
 	node.add_child(name_label)

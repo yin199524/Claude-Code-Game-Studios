@@ -122,6 +122,33 @@ func upgrade_unit(unit_id: String) -> bool:
 	return false
 
 
+## 尝试升级单位（包含金币检查和扣除）
+## unit_id: 单位ID
+## cost: 升级费用
+## 返回: [success: bool, message: String]
+func try_upgrade_unit(unit_id: String, cost: int) -> Array:
+	# 检查是否拥有该单位
+	if not has_unit(unit_id):
+		return [false, "未拥有该单位"]
+
+	# 检查等级上限
+	var current_level = get_unit_level(unit_id)
+	if current_level >= Global.MAX_UNIT_LEVEL:
+		return [false, "已达到最高等级"]
+
+	# 检查金币
+	if not can_afford(cost):
+		return [false, "金币不足"]
+
+	# 扣除金币
+	spend_gold(cost)
+
+	# 升级单位
+	upgrade_unit(unit_id)
+
+	return [true, "升级成功"]
+
+
 ## 解锁关卡
 func unlock_level(level_id: String) -> void:
 	player_data.unlock_level(level_id)

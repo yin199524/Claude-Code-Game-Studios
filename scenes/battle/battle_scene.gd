@@ -163,7 +163,8 @@ func _create_test_player_units() -> void:
 	for data in player_units:
 		var def = UnitDatabase.get_unit(data["id"])
 		if def:
-			var instance = UnitInstance.create(def, data["pos"], true)
+			var unit_level = SaveManager.get_unit_level(data["id"])
+			var instance = UnitInstance.create(def, data["pos"], true, unit_level)
 			grid_layout.place_unit(instance, data["pos"])
 
 
@@ -439,9 +440,9 @@ func _create_unit_visual(unit: UnitInstance) -> Node2D:
 	hp_bar.show_percentage = false
 
 	var name_label = Label.new()
-	name_label.text = unit.definition.display_name
-	name_label.position = Vector2(-30, 40)
-	name_label.add_theme_font_size_override("font_size", 12)
+	name_label.text = "%s Lv.%d" % [unit.definition.display_name, unit.level]
+	name_label.position = Vector2(-35, 40)
+	name_label.add_theme_font_size_override("font_size", 11)
 
 	node.add_child(sprite)
 	node.add_child(hp_bar)
