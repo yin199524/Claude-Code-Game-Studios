@@ -5,6 +5,15 @@
 class_name PlayerData
 extends Resource
 
+## 存档版本号（用于数据迁移）
+@export var save_version: int = 1
+
+## 存档创建时间（Unix timestamp）
+@export var created_at: int = 0
+
+## 最后游玩时间（Unix timestamp）
+@export var last_played: int = 0
+
 ## 玩家当前金币
 @export var gold: int = 100:
 	set(value):
@@ -15,6 +24,9 @@ extends Resource
 
 ## 已完成的关卡列表
 @export var completed_levels: Array[String] = []
+
+## 关卡星级评价 {level_id: stars}
+@export var level_stars: Dictionary = {}
 
 ## 玩家拥有的单位实例
 ## 每个实例包含: unit_id, level
@@ -99,6 +111,18 @@ func complete_level(level_id: String) -> void:
 		completed_levels.append(level_id)
 
 
+## 设置关卡星级
+func set_level_stars(level_id: String, stars: int) -> void:
+	var current = level_stars.get(level_id, 0)
+	if stars > current:
+		level_stars[level_id] = stars
+
+
+## 获取关卡星级
+func get_level_stars(level_id: String) -> int:
+	return level_stars.get(level_id, 0)
+
+
 ## 检查关卡是否已解锁
 func is_level_unlocked(level_id: String) -> bool:
 	return level_id in unlocked_levels
@@ -114,11 +138,57 @@ func get_unit_count() -> int:
 	return owned_units.size()
 
 
+## 更新最后游玩时间
+func update_play_time() -> void:
+	last_played = int(Time.get_unix_time_from_system())
+	if created_at == 0:
+		created_at = last_played
+
+
+## 验证数据有效性
+## 返回: [is_valid, error_messages]
+func validate() -> Array:
+	var errors: Array[String] = []
+
+	# 检查金币
+	if gold < 0:
+		errors.append("金币不能为负数: %d" % gold)
+		gold = 0
+
+	# 检查存档版本
+	if save_version < 1:
+		errors.append("无效的存档版本: %d" % save_version)
+		save_version = 1
+
+	# 检查单位重复
+	var unit_ids: Array[String] = []
+	for unit in owned_units:
+		if unit.unit_id in unit_ids:
+			errors.append("重复的单位: %s" % unit.unit_id)
+		else:
+			unit_ids.append(unit.unit_id)
+
+	# 检查关卡完成状态一致性
+	for level_id in completed_levels:
+		if level_id not in unlocked_levels:
+			errors.append("关卡 %s 已完成但未解锁，自动解锁" % level_id)
+			unlocked_levels.append(level_id)
+
+	if errors.is_empty():
+		return [true, ""]
+	else:
+		return [false, "\n".join(errors)]
+
+
 ## 重置玩家数据（用于测试）
 func reset() -> void:
+	save_version = 1
+	created_at = 0
+	last_played = 0
 	gold = 100
 	unlocked_levels = ["level_001"]
 	completed_levels = []
+	level_stars = {}
 	owned_units = []
 	current_level_id = ""
 	settings = {
@@ -131,6 +201,8 @@ func reset() -> void:
 ## 创建默认玩家数据
 static func create_default() -> PlayerData:
 	var data = PlayerData.new()
+	data.created_at = int(Time.get_unix_time_from_system())
+	data.last_played = data.created_at
 	# 给玩家一些初始单位
 	data.add_unit("unit_warrior", 1)
 	return data

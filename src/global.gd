@@ -47,6 +47,22 @@ const MAX_ATTACK_RANGE: int = 10
 const MAX_ARMOR: int = 100
 const MAX_MOVE_SPEED: float = 5.0
 
+## 克制系统常量
+## 参考: design/gdd/counter-system.md
+const COUNTER_MULTIPLIER: float = 1.3      ## 克制方伤害加成
+const COUNTERED_MULTIPLIER: float = 0.8    ## 被克制方伤害减少
+
+## 克制关系表
+## key: 攻击方职业, value: 被其克制的职业列表
+const COUNTER_RELATIONS: Dictionary = {
+	ClassType.WARRIOR: [ClassType.KNIGHT],           ## 战士克制骑士
+	ClassType.ARCHER: [ClassType.MAGE, ClassType.HEALER],  ## 弓手克制法师、治疗
+	ClassType.MAGE: [ClassType.KNIGHT],              ## 法师克制骑士
+	ClassType.KNIGHT: [ClassType.HEALER],            ## 骑士克制治疗
+	ClassType.HEALER: []                             ## 治疗不克制任何职业
+}
+
+
 ## 获取稀有度名称（用于显示）
 static func get_rarity_name(rarity: Rarity) -> String:
 	match rarity:
@@ -59,6 +75,7 @@ static func get_rarity_name(rarity: Rarity) -> String:
 		Rarity.LEGENDARY:
 			return "传说"
 	return "未知"
+
 
 ## 获取职业名称（用于显示）
 static func get_class_name(class_type: ClassType) -> String:
@@ -74,3 +91,48 @@ static func get_class_name(class_type: ClassType) -> String:
 		ClassType.HEALER:
 			return "治疗"
 	return "未知"
+
+
+## 检查攻击方是否克制目标方
+## 返回: 1 = 克制, -1 = 被克制, 0 = 无克制
+static func get_counter_status(attacker: ClassType, defender: ClassType) -> int:
+	# 同职业无克制
+	if attacker == defender:
+		return 0
+
+	# 检查攻击方是否克制防守方
+	if COUNTER_RELATIONS.has(attacker):
+		if defender in COUNTER_RELATIONS[attacker]:
+			return 1  # 攻击方克制防守方
+
+	# 检查防守方是否克制攻击方
+	if COUNTER_RELATIONS.has(defender):
+		if attacker in COUNTER_RELATIONS[defender]:
+			return -1  # 攻击方被防守方克制
+
+	return 0  # 无克制关系
+
+
+## 获取克制伤害倍率
+## 参考: design/gdd/counter-system.md
+static func get_counter_multiplier(attacker: ClassType, defender: ClassType) -> float:
+	var status = get_counter_status(attacker, defender)
+	match status:
+		1:
+			return COUNTER_MULTIPLIER   # 克制方 +30%
+		-1:
+			return COUNTERED_MULTIPLIER # 被克制方 -20%
+		_:
+			return 1.0  # 无克制
+
+
+## 获取克制状态描述（用于 UI 显示）
+static func get_counter_status_text(attacker: ClassType, defender: ClassType) -> String:
+	var status = get_counter_status(attacker, defender)
+	match status:
+		1:
+			return "克制"
+		-1:
+			return "被克制"
+		_:
+			return ""

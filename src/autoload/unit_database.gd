@@ -108,6 +108,38 @@ func _create_mvp_units() -> void:
 	healer.base_price = 100
 	_units[healer.id] = healer
 
+	# === 敌人专用单位 (T11) ===
+
+	# 精英战士 - 强化版战士（敌人专用）
+	var elite_warrior = UnitDefinition.new()
+	elite_warrior.id = "enemy_elite_warrior"
+	elite_warrior.display_name = "精英战士"
+	elite_warrior.class_type = Global.ClassType.WARRIOR
+	elite_warrior.rarity = Global.Rarity.RARE
+	elite_warrior.hp = 650
+	elite_warrior.attack = 55
+	elite_warrior.attack_speed = 0.9
+	elite_warrior.attack_range = 1
+	elite_warrior.armor = 40
+	elite_warrior.move_speed = 1.2
+	elite_warrior.base_price = 0  # 敌人不可购买
+	_units[elite_warrior.id] = elite_warrior
+
+	# 暗影法师 - 高伤害法师（敌人专用）
+	var shadow_mage = UnitDefinition.new()
+	shadow_mage.id = "enemy_shadow_mage"
+	shadow_mage.display_name = "暗影法师"
+	shadow_mage.class_type = Global.ClassType.MAGE
+	shadow_mage.rarity = Global.Rarity.RARE
+	shadow_mage.hp = 220
+	shadow_mage.attack = 100
+	shadow_mage.attack_speed = 0.5
+	shadow_mage.attack_range = 3
+	shadow_mage.armor = 0
+	shadow_mage.move_speed = 0.8
+	shadow_mage.base_price = 0  # 敌人不可购买
+	_units[shadow_mage.id] = shadow_mage
+
 
 ## 通过 ID 获取单位定义
 func get_unit(unit_id: String) -> UnitDefinition:

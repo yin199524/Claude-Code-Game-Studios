@@ -40,6 +40,12 @@ func load_game() -> bool:
 	var loaded = load(SAVE_PATH)
 	if loaded is PlayerData:
 		player_data = loaded
+		# 验证数据
+		var result = player_data.validate()
+		if not result[0]:
+			push_warning("存档数据验证警告: " + result[1])
+		# 更新游玩时间
+		player_data.update_play_time()
 		data_loaded.emit()
 		return true
 	else:
@@ -54,6 +60,9 @@ func load_game() -> bool:
 func save_game() -> bool:
 	if player_data == null:
 		return false
+
+	# 更新游玩时间
+	player_data.update_play_time()
 
 	var result = ResourceSaver.save(player_data, SAVE_PATH)
 	if result == OK:
@@ -125,6 +134,18 @@ func complete_level(level_id: String) -> void:
 	player_data.complete_level(level_id)
 	data_changed.emit()
 	save_game()
+
+
+## 设置关卡星级
+func set_level_stars(level_id: String, stars: int) -> void:
+	player_data.set_level_stars(level_id, stars)
+	data_changed.emit()
+	save_game()
+
+
+## 获取关卡星级
+func get_level_stars(level_id: String) -> int:
+	return player_data.get_level_stars(level_id)
 
 
 ## 检查关卡是否解锁

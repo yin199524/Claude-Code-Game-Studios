@@ -22,15 +22,15 @@ func _ready() -> void:
 func load_levels() -> void:
 	_levels.clear()
 
-	# 创建 MVP 阶段的 3 个关卡
-	_create_mvp_levels()
+	# 创建 Vertical Slice 阶段的 5 个关卡
+	_create_levels()
 
 	is_loaded = true
 	database_loaded.emit()
 
 
-## 创建 MVP 阶段的 3 个关卡
-func _create_mvp_levels() -> void:
+## 创建 5 个关卡
+func _create_levels() -> void:
 	# 关卡 1：简单入门
 	var level1 = LevelDefinition.new()
 	level1.id = "level_001"
@@ -64,7 +64,7 @@ func _create_mvp_levels() -> void:
 	level2.gold_reward = 100
 	level2.required_level = "level_001"
 
-	# 敌人配置：混合队伍
+	# 敌人配置：混合队伍（战士+弓手）
 	level2.enemy_spawns = [
 		EnemySpawn.create("unit_warrior", Vector2i(0, 0), 1.0),
 		EnemySpawn.create("unit_archer", Vector2i(1, 0), 1.0),
@@ -72,26 +72,67 @@ func _create_mvp_levels() -> void:
 	]
 	_levels[level2.id] = level2
 
-	# 关卡 3：困难挑战
+	# 关卡 3：骑士挑战
 	var level3 = LevelDefinition.new()
 	level3.id = "level_003"
-	level3.display_name = "第三关：决战"
-	level3.description = "最终挑战！击败这支强大的敌军。"
+	level3.display_name = "第三关：钢铁之墙"
+	level3.description = "强大的骑士冲锋！用战士克制他们。"
 	level3.difficulty = 3
 	level3.grid_size = Vector2i(3, 3)
-	level3.player_unit_limit = 5
+	level3.player_unit_limit = 4
 	level3.player_area_start = 2
 	level3.enemy_area_end = 1
-	level3.gold_reward = 200
+	level3.gold_reward = 150
 	level3.required_level = "level_002"
 
-	# 敌人配置：完整队伍
+	# 敌人配置：骑士为主（战士克制）
 	level3.enemy_spawns = [
-		EnemySpawn.create("unit_warrior", Vector2i(0, 0), 1.2),
-		EnemySpawn.create("unit_mage", Vector2i(1, 0), 1.2),
-		EnemySpawn.create("unit_knight", Vector2i(2, 0), 1.2)
+		EnemySpawn.create("unit_knight", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("unit_knight", Vector2i(2, 0), 1.0)
 	]
 	_levels[level3.id] = level3
+
+	# 关卡 4：法师塔
+	var level4 = LevelDefinition.new()
+	level4.id = "level_004"
+	level4.display_name = "第四关：魔法风暴"
+	level4.description = "法师的攻击力惊人！弓手是他们的克星。"
+	level4.difficulty = 4
+	level4.grid_size = Vector2i(3, 3)
+	level4.player_unit_limit = 5
+	level4.player_area_start = 2
+	level4.enemy_area_end = 1
+	level4.gold_reward = 200
+	level4.required_level = "level_003"
+
+	# 敌人配置：法师为主 + 新敌人暗影法师
+	level4.enemy_spawns = [
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("unit_mage", Vector2i(1, 0), 1.1),
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(2, 0), 1.0)
+	]
+	_levels[level4.id] = level4
+
+	# 关卡 5：最终决战
+	var level5 = LevelDefinition.new()
+	level5.id = "level_005"
+	level5.display_name = "第五关：终极试炼"
+	level5.description = "完整的敌方阵容！运用所有克制知识取得胜利！"
+	level5.difficulty = 5
+	level5.grid_size = Vector2i(3, 3)
+	level5.player_unit_limit = 5
+	level5.player_area_start = 2
+	level5.enemy_area_end = 1
+	level5.gold_reward = 300
+	level5.required_level = "level_004"
+
+	# 敌人配置：精英战士 + 暗影法师 + 骑士
+	level5.enemy_spawns = [
+		EnemySpawn.create("enemy_elite_warrior", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(1, 0), 1.0),
+		EnemySpawn.create("unit_knight", Vector2i(2, 0), 1.2)
+	]
+	_levels[level5.id] = level5
 
 
 ## 通过 ID 获取关卡定义
@@ -190,3 +231,19 @@ func get_first_level() -> LevelDefinition:
 		if level.required_level.is_empty():
 			return level
 	return null
+
+
+## 获取已完成的关卡数量
+func get_completed_count() -> int:
+	var count = 0
+	for level_id in _levels.keys():
+		if is_level_completed(level_id):
+			count += 1
+	return count
+
+
+## 获取总进度百分比 (0.0 - 1.0)
+func get_progress() -> float:
+	if _levels.is_empty():
+		return 0.0
+	return float(get_completed_count()) / float(_levels.size())

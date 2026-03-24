@@ -1,6 +1,6 @@
 # DamageCalculator.gd - 伤害计算系统
 # 计算战斗中单位之间的伤害输出
-# 参考: design/gdd/damage-calculation.md
+# 参考: design/gdd/damage-calculation.md, design/gdd/counter-system.md
 
 class_name DamageCalculator
 extends RefCounted
@@ -14,27 +14,12 @@ const ARMOR_SCALING_CONSTANT: float = 100.0
 ## 护甲固定减伤比例
 const ARMOR_FLAT_RATIO: float = 0.2
 
-## 克制加成倍率
-const COUNTER_BONUS: float = 1.2
-
 ## 随机波动范围
 const RANDOM_RANGE_MIN: float = 0.9
 const RANDOM_RANGE_MAX: float = 1.1
 
 ## 最小伤害
 const MIN_DAMAGE: int = 1
-
-
-## 克制关系表（硬编码，待克制系统设计后替换）
-## 格式: [攻击者职业] = [被克制的防御者职业列表]
-## 参考: design/gdd/damage-calculation.md - 克制加成规则
-const COUNTER_TABLE: Dictionary = {
-	Global.ClassType.WARRIOR: [Global.ClassType.KNIGHT],    # 战士克制骑士
-	Global.ClassType.ARCHER: [Global.ClassType.MAGE],        # 弓手克制法师
-	Global.ClassType.MAGE: [Global.ClassType.WARRIOR],       # 法师克制战士
-	Global.ClassType.KNIGHT: [Global.ClassType.ARCHER],      # 骑士克制弓手
-	Global.ClassType.HEALER: []                              # 治疗无克制
-}
 
 
 ## 伤害计算结果
@@ -44,7 +29,7 @@ class DamageResult:
 	var armor_reduction: float = 0.0
 	var counter_multiplier: float = 1.0
 	var random_factor: float = 1.0
-	var has_counter: bool = false
+	var counter_status: int = 0  ## 1=克制, -1=被克制, 0=无克制
 
 	func _init() -> void:
 		pass
@@ -76,9 +61,9 @@ static func calculate(attacker: UnitDefinition, defender: UnitDefinition, use_ra
 	# 4. 应用护甲减伤后的伤害
 	var pre_random_damage: float = result.base_damage * (1.0 - armor_percent_reduction) - armor_flat_reduction
 
-	# 5. 检查克制关系
-	result.has_counter = has_counter(attacker.class_type, defender.class_type)
-	result.counter_multiplier = COUNTER_BONUS if result.has_counter else 1.0
+	# 5. 检查克制关系（使用 Global 中的克制系统）
+	result.counter_status = Global.get_counter_status(attacker.class_type, defender.class_type)
+	result.counter_multiplier = Global.get_counter_multiplier(attacker.class_type, defender.class_type)
 
 	# 6. 应用克制加成
 	var pre_random_total: float = pre_random_damage * result.counter_multiplier
@@ -110,11 +95,14 @@ static func calculate_damage(attacker: UnitDefinition, defender: UnitDefinition,
 ## 检查是否存在克制关系
 ## attacker_class: 攻击者职业
 ## defender_class: 防御者职业
-## 返回: 攻击者是否克制防御者
+## 返回: 1=克制, -1=被克制, 0=无克制
+static func get_counter_status(attacker_class: Global.ClassType, defender_class: Global.ClassType) -> int:
+	return Global.get_counter_status(attacker_class, defender_class)
+
+
+## 检查攻击方是否克制防守方
 static func has_counter(attacker_class: Global.ClassType, defender_class: Global.ClassType) -> bool:
-	if not COUNTER_TABLE.has(attacker_class):
-		return false
-	return defender_class in COUNTER_TABLE[attacker_class]
+	return Global.get_counter_status(attacker_class, defender_class) == 1
 
 
 ## 计算护甲减伤百分比
@@ -134,7 +122,7 @@ static func get_damage_preview(attacker: UnitDefinition, defender: UnitDefinitio
 	var armor_flat: float = armor * ARMOR_FLAT_RATIO
 
 	var pre_random: float = base * (1.0 - armor_percent) - armor_flat
-	var counter_mult: float = COUNTER_BONUS if has_counter(attacker.class_type, defender.class_type) else 1.0
+	var counter_mult: float = Global.get_counter_multiplier(attacker.class_type, defender.class_type)
 
 	var after_counter: float = pre_random * counter_mult
 

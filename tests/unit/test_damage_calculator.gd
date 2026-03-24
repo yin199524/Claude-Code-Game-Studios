@@ -80,22 +80,90 @@ func test_armor_reduction(attacker: UnitDefinition) -> void:
 func test_counter_bonus(attacker: UnitDefinition, defender: UnitDefinition) -> void:
 	print("测试 3: 克制加成")
 
-	# 战士克制骑士
-	var knight = _create_test_unit("knight", Global.ClassType.KNIGHT, 0, 0, Global.Rarity.COMMON)
+	# 测试克制倍率 (1.3) 和被克制倍率 (0.8)
+	# 参考: design/gdd/counter-system.md
 
-	# 无克制
+	# 设置基础单位（无护甲，攻击力 100）
+	attacker.attack = 100
+	attacker.rarity = Global.Rarity.COMMON
+
+	# 测试 3.1: 战士 → 骑士 (克制)
+	print("  测试 3.1: 战士 → 骑士 (克制)")
 	attacker.class_type = Global.ClassType.WARRIOR
-	defender.class_type = Global.ClassType.ARCHER
-	defender.armor = 0
-	var result1 = DamageCalculator.calculate(attacker, defender, false)
+	var knight = _create_test_unit("knight", Global.ClassType.KNIGHT, 0, 0, Global.Rarity.COMMON)
+	var result = DamageCalculator.calculate(attacker, knight, false)
+	assert(result.counter_status == 1, "战士应克制骑士")
+	assert(result.counter_multiplier == 1.3, "克制倍率应为 1.3")
+	assert(result.final_damage == 130, "克制伤害应为 130，实际为 %d" % result.final_damage)
+	print("    ✓ 克制伤害: %d (倍率: %.2f)" % [result.final_damage, result.counter_multiplier])
 
-	# 有克制（战士 -> 骑士）
-	defender = knight
-	defender.armor = 0
-	var result2 = DamageCalculator.calculate(attacker, defender, false)
+	# 测试 3.2: 骑士 → 战士 (被克制)
+	print("  测试 3.2: 骑士 → 战士 (被克制)")
+	attacker.class_type = Global.ClassType.KNIGHT
+	var warrior = _create_test_unit("warrior", Global.ClassType.WARRIOR, 0, 0, Global.Rarity.COMMON)
+	result = DamageCalculator.calculate(attacker, warrior, false)
+	assert(result.counter_status == -1, "骑士应被战士克制")
+	assert(result.counter_multiplier == 0.8, "被克制倍率应为 0.8")
+	assert(result.final_damage == 80, "被克制伤害应为 80，实际为 %d" % result.final_damage)
+	print("    ✓ 被克制伤害: %d (倍率: %.2f)" % [result.final_damage, result.counter_multiplier])
 
-	assert(result2.final_damage == int(result1.final_damage * 1.2), "克制加成应为 1.2 倍")
-	print("  ✓ 无克制伤害: %d，有克制伤害: %d (倍率: %.2f)" % [result1.final_damage, result2.final_damage, float(result2.final_damage) / float(result1.final_damage)])
+	# 测试 3.3: 弓手 → 法师 (克制)
+	print("  测试 3.3: 弓手 → 法师 (克制)")
+	attacker.class_type = Global.ClassType.ARCHER
+	var mage = _create_test_unit("mage", Global.ClassType.MAGE, 0, 0, Global.Rarity.COMMON)
+	result = DamageCalculator.calculate(attacker, mage, false)
+	assert(result.counter_status == 1, "弓手应克制法师")
+	assert(result.counter_multiplier == 1.3, "克制倍率应为 1.3")
+	print("    ✓ 弓手克制法师: 伤害 %d (倍率: %.2f)" % [result.final_damage, result.counter_multiplier])
+
+	# 测试 3.4: 弓手 → 治疗 (克制)
+	print("  测试 3.4: 弓手 → 治疗 (克制)")
+	var healer = _create_test_unit("healer", Global.ClassType.HEALER, 0, 0, Global.Rarity.COMMON)
+	result = DamageCalculator.calculate(attacker, healer, false)
+	assert(result.counter_status == 1, "弓手应克制治疗")
+	print("    ✓ 弓手克制治疗: 伤害 %d" % result.final_damage)
+
+	# 测试 3.5: 法师 → 骑士 (克制)
+	print("  测试 3.5: 法师 → 骑士 (克制)")
+	attacker.class_type = Global.ClassType.MAGE
+	result = DamageCalculator.calculate(attacker, knight, false)
+	assert(result.counter_status == 1, "法师应克制骑士")
+	print("    ✓ 法师克制骑士: 伤害 %d" % result.final_damage)
+
+	# 测试 3.6: 骑士 → 治疗 (克制)
+	print("  测试 3.6: 骑士 → 治疗 (克制)")
+	attacker.class_type = Global.ClassType.KNIGHT
+	result = DamageCalculator.calculate(attacker, healer, false)
+	assert(result.counter_status == 1, "骑士应克制治疗")
+	print("    ✓ 骑士克制治疗: 伤害 %d" % result.final_damage)
+
+	# 测试 3.7: 同职业无克制
+	print("  测试 3.7: 同职业无克制")
+	attacker.class_type = Global.ClassType.WARRIOR
+	result = DamageCalculator.calculate(attacker, warrior, false)
+	assert(result.counter_status == 0, "同职业应无克制")
+	assert(result.counter_multiplier == 1.0, "同职业倍率应为 1.0")
+	assert(result.final_damage == 100, "同职业伤害应为 100，实际为 %d" % result.final_damage)
+	print("    ✓ 同职业无克制: 伤害 %d (倍率: %.2f)" % [result.final_damage, result.counter_multiplier])
+
+	# 测试 3.8: 无克制关系
+	print("  测试 3.8: 无克制关系 (战士 vs 弓手)")
+	attacker.class_type = Global.ClassType.WARRIOR
+	var archer = _create_test_unit("archer", Global.ClassType.ARCHER, 0, 0, Global.Rarity.COMMON)
+	result = DamageCalculator.calculate(attacker, archer, false)
+	assert(result.counter_status == 0, "战士与弓手应无克制关系")
+	assert(result.counter_multiplier == 1.0, "无克制倍率应为 1.0")
+	print("    ✓ 无克制关系: 伤害 %d" % result.final_damage)
+
+	# 测试 3.9: 治疗不克制任何职业
+	print("  测试 3.9: 治疗不克制任何职业")
+	attacker.class_type = Global.ClassType.HEALER
+	result = DamageCalculator.calculate(attacker, warrior, false)
+	assert(result.counter_status == 0, "治疗不克制战士")
+	print("    ✓ 治疗对战士: 无克制")
+
+	# 重置
+	attacker.attack = 100
 
 
 ## 测试随机波动

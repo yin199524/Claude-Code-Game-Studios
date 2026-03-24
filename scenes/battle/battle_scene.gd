@@ -224,9 +224,9 @@ func _on_turn_completed(turn_number: int) -> void:
 
 
 ## 单位攻击回调
-func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int) -> void:
+func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int, counter_status: int) -> void:
 	_update_unit_node(target)
-	_show_damage_number(target.grid_position, damage, attacker.get_class_type() == Global.ClassType.HEALER)
+	_show_damage_number(target.grid_position, damage, attacker.get_class_type() == Global.ClassType.HEALER, counter_status)
 
 	# 攻击音效
 	SoundManager.play_sfx(SoundManager.SFX.UNIT_ATTACK)
@@ -289,13 +289,32 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 
 	# 添加关卡奖励
 	var gold_reward = 0
+	var next_level: LevelDefinition = null
+	var unlocked_new_level = false
+	var stars = 0  # 星级评价
+
 	if victory and current_level:
 		gold_reward = current_level.gold_reward
+
+		# 计算星级 (T12)
+		stars = _calculate_stars()
+		# 星级加成金币奖励
+		var star_bonus = stars * 20  # 每星额外 20 金币
+		gold_reward += star_bonus
+
 		rewards["gold"] = gold_reward
+		rewards["stars"] = stars
 		SaveManager.add_gold(gold_reward)
 
-		# 完成关卡
+		# 完成关卡并保存星级
 		LevelDatabase.complete_level(current_level.id)
+		SaveManager.set_level_stars(current_level.id, stars)
+
+		# 检查并解锁下一关
+		next_level = LevelDatabase.get_next_level(current_level.id)
+		if next_level and not LevelDatabase.is_level_unlocked(next_level.id):
+			LevelDatabase.unlock_level(next_level.id)
+			unlocked_new_level = true
 
 		# 保存游戏
 		SaveManager.save_game()
@@ -308,10 +327,11 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	var reward_label = result_panel.get_node("VBoxContainer/RewardLabel")
 
 	if victory:
-		icon_label.text = "🏆"
+		# 显示星级
+		icon_label.text = _get_star_display(stars)
 		result_label.text = "战斗胜利!"
 		result_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3, 1))
-		reward_label.text = "获得金币: %d" % rewards.get("gold", 0)
+		reward_label.text = "获得金币: %d (星级奖励: %d)" % [rewards.get("gold", 0), stars * 20]
 	else:
 		icon_label.text = "💔"
 		result_label.text = "战斗失败..."
@@ -333,6 +353,43 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 		await get_tree().create_timer(0.3).timeout
 		SoundManager.play_sfx(SoundManager.SFX.GOLD_GAIN)
 		SceneTransition.show_gold_floating_text(self, gold_reward, screen_center)
+
+	# 关卡解锁动画
+	if victory and unlocked_new_level and next_level:
+		await get_tree().create_timer(0.5).timeout
+		SceneTransition.show_level_unlock_animation(self, next_level.display_name, Vector2(360, 500))
+
+
+## 计算星级评价 (T12)
+## 返回: 1-3 星
+func _calculate_stars() -> int:
+	var state = battle_manager.get_battle_state()
+	var turns = state.current_turn
+	var player_alive = state.player_units_alive
+
+	# 星级规则：
+	# 3星: 回合数 < 10 且存活单位 >= 2
+	# 2星: 回合数 < 15 且存活单位 >= 1
+	# 1星: 其他情况
+
+	if turns < 10 and player_alive >= 2:
+		return 3
+	elif turns < 15 and player_alive >= 1:
+		return 2
+	else:
+		return 1
+
+
+## 获取星级显示文本
+func _get_star_display(stars: int) -> String:
+	match stars:
+		3:
+			return "⭐⭐⭐"
+		2:
+			return "⭐⭐"
+		1:
+			return "⭐"
+	return ""
 
 
 ## 创建单位节点
@@ -366,6 +423,14 @@ func _create_unit_visual(unit: UnitInstance) -> Node2D:
 	sprite.position = Vector2(-40, -40)
 	sprite.color = _get_unit_color(unit)
 
+	# 职业图标
+	var class_icon = Label.new()
+	class_icon.text = _get_unit_class_icon(unit.get_class_type())
+	class_icon.position = Vector2(-15, -30)
+	class_icon.add_theme_font_size_override("font_size", 28)
+	class_icon.z_index = 1
+	node.add_child(class_icon)
+
 	var hp_bar = ProgressBar.new()
 	hp_bar.position = Vector2(-35, -50)
 	hp_bar.size = Vector2(70, 10)
@@ -383,6 +448,22 @@ func _create_unit_visual(unit: UnitInstance) -> Node2D:
 	node.add_child(name_label)
 
 	return node
+
+
+## 获取单位职业图标
+func _get_unit_class_icon(class_type: Global.ClassType) -> String:
+	match class_type:
+		Global.ClassType.WARRIOR:
+			return "🗡"
+		Global.ClassType.ARCHER:
+			return "🏹"
+		Global.ClassType.MAGE:
+			return "🔮"
+		Global.ClassType.KNIGHT:
+			return "🛡"
+		Global.ClassType.HEALER:
+			return "💚"
+	return "?"
 
 
 ## 获取单位颜色
@@ -417,7 +498,8 @@ func _update_unit_node(unit: UnitInstance) -> void:
 
 
 ## 显示伤害数字
-func _show_damage_number(position: Vector2i, damage: int, is_heal: bool) -> void:
+## counter_status: 1=克制(金色), -1=被克制(灰色), 0=普通
+func _show_damage_number(position: Vector2i, damage: int, is_heal: bool, counter_status: int = 0) -> void:
 	var screen_pos = grid_layout.grid_to_screen(position, grid_origin)
 
 	var label = Label.new()
@@ -425,12 +507,41 @@ func _show_damage_number(position: Vector2i, damage: int, is_heal: bool) -> void
 	label.position = screen_pos + Vector2(-20, -80)
 	label.add_theme_font_size_override("font_size", 24)
 
+	# 根据状态设置颜色
 	if is_heal:
+		# 治疗为绿色
 		label.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2))
+	elif counter_status == 1:
+		# 克制为金色
+		label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		label.add_theme_font_size_override("font_size", 28)  # 克制伤害数字更大
+	elif counter_status == -1:
+		# 被克制为灰色
+		label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	else:
+		# 普通伤害为红色
 		label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 
 	add_child(label)
+
+	# 克制倍率标签
+	if counter_status != 0 and not is_heal:
+		var counter_label = Label.new()
+		if counter_status == 1:
+			counter_label.text = "+30%"
+			counter_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		else:
+			counter_label.text = "-20%"
+			counter_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		counter_label.position = screen_pos + Vector2(25, -75)
+		counter_label.add_theme_font_size_override("font_size", 14)
+		add_child(counter_label)
+
+		var counter_tween = create_tween()
+		counter_tween.set_parallel(true)
+		counter_tween.tween_property(counter_label, "position:y", counter_label.position.y - 50, 1.0)
+		counter_tween.tween_property(counter_label, "modulate:a", 0.0, 1.0)
+		counter_tween.chain().tween_callback(counter_label.queue_free)
 
 	var tween = create_tween()
 	tween.tween_property(label, "position:y", label.position.y - 50, 1.0)

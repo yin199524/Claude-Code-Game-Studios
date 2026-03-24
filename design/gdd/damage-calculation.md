@@ -40,7 +40,7 @@
 
 #### 3. 克制加成规则
 
-- 当攻击者职业克制防御者职业时，伤害 × 1.2
+- 当攻击者职业克制防御者职业时，伤害 × 1.3
 - 克制关系由克制系统定义
 - MVP 阶段克制关系可在单位数据中硬编码
 
@@ -91,7 +91,7 @@ final_damage = max(1, floor(pre_random_damage × counter_multiplier × random_fa
 |------|-----|------|
 | `ARMOR_SCALING_CONSTANT` | 100 | 护甲百分比减伤缩放常数 |
 | `ARMOR_FLAT_RATIO` | 0.2 | 护甲固定减伤比例 |
-| `COUNTER_BONUS` | 1.2 | 克制加成倍率 |
+| `COUNTER_BONUS` | 1.3 | 克制加成倍率 |
 | `RANDOM_RANGE` | 0.9 ~ 1.1 | 随机波动范围 |
 | `MIN_DAMAGE` | 1 | 最小伤害 |
 
@@ -108,7 +108,7 @@ final_damage = max(1, floor(pre_random_damage × counter_multiplier × random_fa
 
 假设基础伤害 100，无护甲：
 - 无克制：伤害 = 100 × (0.9~1.1) = 90~110
-- 有克制：伤害 = 100 × 1.2 × (0.9~1.1) = 108~132
+- 有克制：伤害 = 100 × 1.3 × (0.9~1.1) = 117~143
 
 ### 稀有度影响
 
@@ -190,7 +190,7 @@ func has_counter(attacker_class: ClassType, defender_class: ClassType) -> bool:
 |------|--------|----------|------|
 | `ARMOR_SCALING_CONSTANT` | 100 | 50 - 200 | 护甲百分比减伤效率 |
 | `ARMOR_FLAT_RATIO` | 0.2 | 0.1 - 0.5 | 护甲固定减伤比例 |
-| `COUNTER_BONUS` | 1.2 | 1.1 - 2.0 | 克制伤害加成 |
+| `COUNTER_BONUS` | 1.3 | 1.1 - 2.0 | 克制伤害加成 |
 | `RANDOM_RANGE_MIN` | 0.9 | 0.8 - 1.0 | 随机波动下限 |
 | `RANDOM_RANGE_MAX` | 1.1 | 1.0 - 1.3 | 随机波动上限 |
 | `MIN_DAMAGE` | 1 | 1 - 10 | 最小伤害值 |

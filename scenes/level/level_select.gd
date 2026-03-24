@@ -9,10 +9,14 @@ var level_button_scene: PackedScene = null
 ## 当前选中的关卡
 var selected_level_id: String = ""
 
+## 预览弹窗
+var preview_panel: Control = null
+
 
 func _ready() -> void:
 	_connect_signals()
 	_update_gold_display()
+	_create_preview_panel()
 	_populate_level_list()
 
 
@@ -25,6 +29,280 @@ func _connect_signals() -> void:
 func _update_gold_display() -> void:
 	var label = $VBoxContainer/Header/GoldDisplay/GoldLabel
 	label.text = "%d" % SaveManager.get_gold()
+
+
+## 创建预览弹窗（初始隐藏）
+func _create_preview_panel() -> void:
+	preview_panel = Control.new()
+	preview_panel.name = "LevelPreviewPanel"
+	preview_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	preview_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	preview_panel.z_index = 50
+	preview_panel.visible = false
+	add_child(preview_panel)
+
+	# 半透明背景
+	var bg = ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.6)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	preview_panel.add_child(bg)
+
+	# 点击背景关闭
+	bg.gui_input.connect(func(event):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			hide_preview()
+	)
+
+	# 弹窗容器
+	var popup = PanelContainer.new()
+	popup.name = "PopupContainer"
+	popup.set_anchors_preset(Control.PRESET_CENTER)
+	popup.custom_minimum_size = Vector2(500, 400)
+	popup.position = Vector2(110, 440)  # 屏幕中心偏上
+
+	var popup_style = StyleBoxFlat.new()
+	popup_style.bg_color = Color(0.12, 0.15, 0.22, 0.98)
+	popup_style.border_color = Color(0.4, 0.5, 0.7, 1)
+	popup_style.set_border_width_all(3)
+	popup_style.set_corner_radius_all(15)
+	popup_style.shadow_color = Color(0, 0, 0, 0.5)
+	popup_style.shadow_size = 10
+	popup.add_theme_stylebox_override("panel", popup_style)
+	preview_panel.add_child(popup)
+
+	# 内容容器
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	popup.add_child(vbox)
+
+	# 标题区域
+	var title_hbox = HBoxContainer.new()
+	vbox.add_child(title_hbox)
+
+	var icon_label = Label.new()
+	icon_label.name = "IconLabel"
+	icon_label.text = "⚔"
+	icon_label.add_theme_font_size_override("font_size", 28)
+	title_hbox.add_child(icon_label)
+
+	var title_label = Label.new()
+	title_label.name = "TitleLabel"
+	title_label.text = "关卡预览"
+	title_label.add_theme_font_size_override("font_size", 24)
+	title_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 1))
+	title_hbox.add_child(title_label)
+
+	# 分隔线
+	var sep = HSeparator.new()
+	sep.add_theme_stylebox_override("separator", StyleBoxFlat.new())
+	var sep_style = sep.get_theme_stylebox("separator") as StyleBoxFlat
+	sep_style.color = Color(0.3, 0.35, 0.45, 1)
+	vbox.add_child(sep)
+
+	# 关卡信息区域
+	var info_vbox = VBoxContainer.new()
+	info_vbox.name = "InfoContainer"
+	info_vbox.add_theme_constant_override("separation", 8)
+	vbox.add_child(info_vbox)
+
+	# 敌人列表区域
+	var enemy_section = VBoxContainer.new()
+	enemy_section.name = "EnemySection"
+	enemy_section.add_theme_constant_override("separation", 6)
+	vbox.add_child(enemy_section)
+
+	# 克制提示区域
+	var counter_section = VBoxContainer.new()
+	counter_section.name = "CounterSection"
+	counter_section.add_theme_constant_override("separation", 4)
+	vbox.add_child(counter_section)
+
+	# 奖励区域
+	var reward_hbox = HBoxContainer.new()
+	reward_hbox.name = "RewardContainer"
+	vbox.add_child(reward_hbox)
+
+	# 按钮区域
+	var btn_hbox = HBoxContainer.new()
+	btn_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_hbox.add_theme_constant_override("separation", 20)
+	vbox.add_child(btn_hbox)
+
+	var cancel_btn = Button.new()
+	cancel_btn.text = "返回"
+	cancel_btn.custom_minimum_size = Vector2(100, 40)
+	cancel_btn.pressed.connect(hide_preview)
+	btn_hbox.add_child(cancel_btn)
+
+	var start_btn = Button.new()
+	start_btn.name = "StartButton"
+	start_btn.text = "开始战斗"
+	start_btn.custom_minimum_size = Vector2(140, 40)
+	start_btn.pressed.connect(_on_start_battle_pressed)
+	btn_hbox.add_child(start_btn)
+
+
+## 显示关卡预览
+func show_preview(level: LevelDefinition) -> void:
+	selected_level_id = level.id
+
+	var popup = preview_panel.get_node("PopupContainer")
+	var info_container = popup.get_node("InfoContainer")
+	var enemy_section = popup.get_node("EnemySection")
+	var counter_section = popup.get_node("CounterSection")
+	var reward_container = popup.get_node("RewardContainer")
+
+	# 清空旧内容
+	for child in info_container.get_children():
+		child.queue_free()
+	for child in enemy_section.get_children():
+		child.queue_free()
+	for child in counter_section.get_children():
+		child.queue_free()
+	for child in reward_container.get_children():
+		child.queue_free()
+
+	await get_tree().process_frame
+
+	# 标题
+	var title_label = popup.get_node("TitleLabel")
+	title_label.text = level.display_name
+
+	# 关卡信息
+	var desc_label = Label.new()
+	desc_label.text = level.description
+	desc_label.add_theme_font_size_override("font_size", 14)
+	desc_label.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8, 1))
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info_container.add_child(desc_label)
+
+	var stats_label = Label.new()
+	stats_label.text = "难度: %d  |  单位上限: %d" % [level.difficulty, level.player_unit_limit]
+	stats_label.add_theme_font_size_override("font_size", 12)
+	stats_label.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7, 1))
+	info_container.add_child(stats_label)
+
+	# 敌人列表标题
+	var enemy_title = Label.new()
+	enemy_title.text = "—— 敌人阵容 ——"
+	enemy_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	enemy_title.add_theme_font_size_override("font_size", 14)
+	enemy_title.add_theme_color_override("font_color", Color(0.9, 0.5, 0.5, 1))
+	enemy_section.add_child(enemy_title)
+
+	# 收集敌人信息
+	var enemy_types: Dictionary = {}
+	for spawn in level.enemy_spawns:
+		var unit_def = UnitDatabase.get_unit(spawn.unit_id)
+		if unit_def:
+			if not enemy_types.has(spawn.unit_id):
+				enemy_types[spawn.unit_id] = {"count": 0, "def": unit_def}
+			enemy_types[spawn.unit_id]["count"] += 1
+
+	# 敌人列表
+	var enemy_list = HBoxContainer.new()
+	enemy_list.alignment = BoxContainer.ALIGNMENT_CENTER
+	enemy_list.add_theme_constant_override("separation", 15)
+	enemy_section.add_child(enemy_list)
+
+	# 克制推荐收集
+	var counter_recommendations: Array[String] = []
+
+	for unit_id in enemy_types.keys():
+		var enemy_data = enemy_types[unit_id]
+		var enemy_vbox = VBoxContainer.new()
+		enemy_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		enemy_list.add_child(enemy_vbox)
+
+		# 敌人图标
+		var icon = Label.new()
+		icon.text = _get_unit_class_icon(enemy_data["def"].class_type)
+		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon.add_theme_font_size_override("font_size", 28)
+		enemy_vbox.add_child(icon)
+
+		# 敌人名称和数量
+		var name_label = Label.new()
+		name_label.text = "%s ×%d" % [enemy_data["def"].display_name, enemy_data["count"]]
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.add_theme_font_size_override("font_size", 12)
+		name_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85, 1))
+		enemy_vbox.add_child(name_label)
+
+		# 克制提示
+		var counter_text = _get_counter_recommendation(enemy_data["def"].class_type)
+		if not counter_text.is_empty():
+			counter_recommendations.append(counter_text)
+
+	# 克制提示区域
+	var counter_title = Label.new()
+	counter_title.text = "—— 克制提示 ——"
+	counter_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	counter_title.add_theme_font_size_override("font_size", 14)
+	counter_title.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1))
+	counter_section.add_child(counter_title)
+
+	if counter_recommendations.is_empty():
+		var no_hint = Label.new()
+		no_hint.text = "无特殊克制要求"
+		no_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		no_hint.add_theme_font_size_override("font_size", 12)
+		no_hint.add_theme_color_override("font_color", Color(0.5, 0.55, 0.6, 1))
+		counter_section.add_child(no_hint)
+	else:
+		for hint in counter_recommendations:
+			var hint_label = Label.new()
+			hint_label.text = hint
+			hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			hint_label.add_theme_font_size_override("font_size", 12)
+			hint_label.add_theme_color_override("font_color", Color(0.6, 0.85, 0.6, 1))
+			counter_section.add_child(hint_label)
+
+	# 奖励区域
+	var reward_icon = Label.new()
+	reward_icon.text = "💰"
+	reward_icon.add_theme_font_size_override("font_size", 20)
+	reward_container.add_child(reward_icon)
+
+	var reward_label = Label.new()
+	reward_label.text = "通关奖励: %d 金币" % level.gold_reward
+	reward_label.add_theme_font_size_override("font_size", 16)
+	reward_label.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+	reward_container.add_child(reward_label)
+
+	# 显示弹窗
+	preview_panel.visible = true
+	SceneTransition.popup_animation(popup)
+
+
+## 隐藏预览
+func hide_preview() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
+	preview_panel.visible = false
+
+
+## 获取克制推荐文本
+func _get_counter_recommendation(enemy_class: Global.ClassType) -> String:
+	# 查找克制该职业的单位
+	match enemy_class:
+		Global.ClassType.WARRIOR:
+			return "弓手克制战士 (伤害 +30%)"
+		Global.ClassType.ARCHER:
+			return ""  # 无克制弓手的单位
+		Global.ClassType.MAGE:
+			return "弓手克制法师 (伤害 +30%)"
+		Global.ClassType.KNIGHT:
+			return "战士/法师克制骑士 (伤害 +30%)"
+		Global.ClassType.HEALER:
+			return "弓手/骑士克制治疗 (伤害 +30%)"
+	return ""
+
+
+## 开始战斗按钮
+func _on_start_battle_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
+	GameManager.current_level_id = selected_level_id
+	SceneTransition.change_scene("res://scenes/battle/battle_setup.tscn")
 
 
 ## 填充关卡列表
@@ -189,9 +467,9 @@ func _create_level_button(level: LevelDefinition) -> Control:
 ## 关卡选中
 func _on_level_selected(level_id: String) -> void:
 	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
-	selected_level_id = level_id
-	GameManager.current_level_id = level_id
-	SceneTransition.change_scene("res://scenes/battle/battle_setup.tscn")
+	var level = LevelDatabase.get_level(level_id)
+	if level:
+		show_preview(level)
 
 
 ## 返回按钮

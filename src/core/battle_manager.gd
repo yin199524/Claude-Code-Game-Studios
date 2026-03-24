@@ -7,7 +7,7 @@ extends RefCounted
 
 ## 信号
 signal turn_completed(turn_number: int)
-signal unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int)
+signal unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int, counter_status: int)
 signal unit_died(unit: UnitInstance)
 signal battle_ended(victory: bool, rewards: Dictionary)
 
@@ -245,7 +245,7 @@ func _execute_attack(attacker: UnitInstance, target: UnitInstance) -> void:
 
 	# 应用伤害
 	var actual_damage = target.take_damage(result.final_damage)
-	unit_attacked.emit(attacker, target, actual_damage)
+	unit_attacked.emit(attacker, target, actual_damage, result.counter_status)
 
 	# 检查死亡
 	if not target.is_alive:
@@ -258,8 +258,8 @@ func _heal_target(healer: UnitInstance, target: UnitInstance) -> void:
 	var heal_amount = int(healer.definition.get_effective_attack() * 0.5)
 	var actual_heal = target.heal(heal_amount)
 
-	# 发送攻击信号用于 UI 显示（治疗也是"攻击"的一种）
-	unit_attacked.emit(healer, target, actual_heal)
+	# 发送攻击信号用于 UI 显示（治疗也是"攻击"的一种，克制状态为 0）
+	unit_attacked.emit(healer, target, actual_heal, 0)
 
 
 ## 检查战斗结束
