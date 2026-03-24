@@ -12,58 +12,91 @@ var grid_origin: Vector2 = Vector2(0, 0)
 ## 网格布局
 var grid_layout: GridLayout = null
 
+## 当前关卡定义
+var current_level: LevelDefinition = null
+
 ## 当前选中的单位
 var selected_unit_id: String = ""
 
 ## 单位节点映射
 var unit_nodes: Dictionary = {}
 
-## 拖动中的单位
-var dragging_unit: UnitInstance = null
-var drag_offset: Vector2 = Vector2.ZERO
+## 已放置单位数量
+var placed_count: int = 0
 
 
 func _ready() -> void:
+	_load_level_data()
 	_setup_grid_layout()
 	_create_unit_buttons()
 	_connect_signals()
-	_draw_grid()
+	_place_enemies()
+
+
+## 加载关卡数据
+func _load_level_data() -> void:
+	var level_id = GameManager.current_level_id
+	if level_id.is_empty():
+		level_id = "level_001"  # 默认第一关
+
+	current_level = LevelDatabase.get_level(level_id)
+	if current_level == null:
+		print("关卡未找到: %s, 使用默认配置" % level_id)
+		current_level = LevelDatabase.get_first_level()
 
 
 ## 设置网格布局
 func _setup_grid_layout() -> void:
 	grid_layout = GridLayout.new()
-	grid_layout.grid_width = 3
-	grid_layout.grid_height = 3
+
+	# 使用关卡配置
+	if current_level:
+		grid_layout.grid_width = current_level.grid_size.x
+		grid_layout.grid_height = current_level.grid_size.y
+		grid_layout.player_area_start = current_level.player_area_start
+		grid_layout.enemy_area_end = current_level.enemy_area_end
+	else:
+		grid_layout.grid_width = 3
+		grid_layout.grid_height = 3
+		grid_layout.player_area_start = 2
+		grid_layout.enemy_area_end = 1
+
 	grid_layout.cell_size = CELL_SIZE
-	grid_layout.player_area_start = 2
-	grid_layout.enemy_area_end = 1
 
 	grid_layout.unit_placed.connect(_on_unit_placed)
 	grid_layout.unit_removed.connect(_on_unit_removed)
 
-	# 预置敌人（测试用）
-	_place_test_enemies()
 
+## 放置关卡敌人
+func _place_enemies() -> void:
+	if current_level == null:
+		return
 
-## 放置测试敌人
-func _place_test_enemies() -> void:
-	var enemy_def = UnitDatabase.get_unit("unit_warrior")
-	if enemy_def:
-		var enemy1 = UnitInstance.create(enemy_def, Vector2i(0, 0), false)
-		enemy1.definition = enemy_def.duplicate()
-		enemy1.definition.display_name = "敌人1"
-		grid_layout.place_unit(enemy1, Vector2i(0, 0))
+	for spawn in current_level.enemy_spawns:
+		var unit_def = UnitDatabase.get_unit(spawn.unit_id)
+		if unit_def == null:
+			continue
 
-		var enemy2 = UnitInstance.create(enemy_def, Vector2i(2, 0), false)
-		enemy2.definition = enemy_def.duplicate()
-		enemy2.definition.display_name = "敌人2"
-		grid_layout.place_unit(enemy2, Vector2i(2, 0))
+		# 创建敌人实例
+		var instance = UnitInstance.create(unit_def, spawn.position, false)
+
+		# 应用属性加成
+		instance.definition = unit_def.duplicate()
+		instance.definition.hp = int(unit_def.hp * spawn.level_modifier)
+		instance.definition.attack = int(unit_def.attack * spawn.level_modifier)
+		instance.current_hp = instance.get_max_hp()
+		instance.definition.display_name = "敌人%s" % unit_def.display_name
+
+		grid_layout.place_unit(instance, spawn.position)
 
 
 ## 创建单位选择按钮
 func _create_unit_buttons() -> void:
 	var container = $UnitList/Units
+
+	# 清空现有按钮
+	for child in container.get_children():
+		child.queue_free()
 
 	# 获取玩家拥有的单位
 	var owned = SaveManager.get_owned_units()
@@ -87,8 +120,7 @@ func _connect_signals() -> void:
 
 ## 绘制网格线
 func _draw_grid() -> void:
-	var grid_node = $GridContainer/GridLines
-	# 网格线将在 _draw 中绘制
+	pass
 
 
 func _draw() -> void:
@@ -98,18 +130,27 @@ func _draw() -> void:
 	# 计算网格原点
 	grid_origin = Vector2(rect.position.x + 50, rect.position.y + 50)
 
-	# 绘制网格线
-	for x in range(4):
-		var x_pos = grid_origin.x + x * CELL_SIZE
-		draw_line(Vector2(x_pos, grid_origin.y), Vector2(x_pos, grid_origin.y + 3 * CELL_SIZE), Color.WHITE, 1)
+	var width = grid_layout.grid_width if grid_layout else 3
+	var height = grid_layout.grid_height if grid_layout else 3
 
-	for y in range(4):
+	# 绘制网格线
+	for x in range(width + 1):
+		var x_pos = grid_origin.x + x * CELL_SIZE
+		draw_line(Vector2(x_pos, grid_origin.y), Vector2(x_pos, grid_origin.y + height * CELL_SIZE), Color.WHITE, 1)
+
+	for y in range(height + 1):
 		var y_pos = grid_origin.y + y * CELL_SIZE
-		draw_line(Vector2(grid_origin.x, y_pos), Vector2(grid_origin.x + 3 * CELL_SIZE, y_pos), Color.WHITE, 1)
+		draw_line(Vector2(grid_origin.x, y_pos), Vector2(grid_origin.x + width * CELL_SIZE, y_pos), Color.WHITE, 1)
 
 
 ## 单位按钮按下
 func _on_unit_button_pressed(unit_id: String) -> void:
+	# 检查单位上限
+	var limit = current_level.player_unit_limit if current_level else 5
+	if placed_count >= limit:
+		print("已达到单位上限: %d" % limit)
+		return
+
 	selected_unit_id = unit_id
 	print("选中单位: %s" % unit_id)
 
@@ -139,6 +180,7 @@ func _handle_grid_click(screen_pos: Vector2) -> void:
 		var unit = grid_layout.get_unit_at(grid_pos)
 		if unit.is_player_unit:
 			grid_layout.remove_unit(grid_pos)
+			placed_count -= 1
 
 
 ## 放置选中的单位
@@ -158,6 +200,7 @@ func _place_selected_unit(grid_pos: Vector2i) -> void:
 	if def:
 		var instance = UnitInstance.create(def, grid_pos, true)
 		grid_layout.place_unit(instance, grid_pos)
+		placed_count += 1
 
 
 ## 单位放置回调
@@ -229,6 +272,7 @@ func _get_unit_color(unit: UnitInstance) -> Color:
 ## 清空按钮
 func _on_clear_pressed() -> void:
 	grid_layout.clear_player_units()
+	placed_count = 0
 
 
 ## 开始战斗按钮
@@ -238,8 +282,20 @@ func _on_start_pressed() -> void:
 		print("请至少放置一个单位")
 		return
 
+	# 保存布局到全局（用于战斗场景）
+	_store_layout_for_battle()
+
 	# 切换到战斗场景
 	get_tree().change_scene_to_file("res://scenes/battle/battle_scene.tscn")
+
+
+## 保存布局供战斗使用
+func _store_layout_for_battle() -> void:
+	# 使用 GameManager 的自定义数据存储
+	if not GameManager.has_meta("battle_layout"):
+		GameManager.set_meta("battle_layout", grid_layout.duplicate_layout())
+	else:
+		GameManager.set_meta("battle_layout", grid_layout.duplicate_layout())
 
 
 ## 屏幕坐标转网格坐标

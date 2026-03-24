@@ -10,7 +10,7 @@ const TURN_DURATION: float = 1.0
 const CELL_SIZE: int = 100
 
 ## 网格原点
-const GRID_ORIGIN: Vector2 = Vector2(50, 50)
+var grid_origin: Vector2 = Vector2(50, 50)
 
 ## 战斗管理器
 var battle_manager: BattleManager = null
@@ -18,17 +18,24 @@ var battle_manager: BattleManager = null
 ## 网格布局
 var grid_layout: GridLayout = null
 
-## 单位场景
-var unit_scene: PackedScene = null
+## 当前关卡定义
+var current_level: LevelDefinition = null
 
 ## 单位节点映射
 var unit_nodes: Dictionary = {}
 
-## 是否战斗中
+## 是否已初始化
 var is_initialized: bool = false
+
+## 战斗结果
+var battle_victory: bool = false
+var battle_rewards: Dictionary = {}
 
 
 func _ready() -> void:
+	# 加载关卡数据
+	_load_level_data()
+
 	# 初始化网格布局
 	_setup_grid_layout()
 
@@ -40,8 +47,8 @@ func _ready() -> void:
 
 	is_initialized = true
 
-	# 自动开始测试战斗
-	start_test_battle()
+	# 加载布局并开始战斗
+	start_battle()
 
 
 func _process(delta: float) -> void:
@@ -49,14 +56,34 @@ func _process(delta: float) -> void:
 		battle_manager.update(delta)
 
 
+## 加载关卡数据
+func _load_level_data() -> void:
+	var level_id = GameManager.current_level_id
+	if level_id.is_empty():
+		level_id = "level_001"
+
+	current_level = LevelDatabase.get_level(level_id)
+	if current_level == null:
+		current_level = LevelDatabase.get_first_level()
+
+
 ## 设置网格布局
 func _setup_grid_layout() -> void:
 	grid_layout = GridLayout.new()
-	grid_layout.grid_width = 3
-	grid_layout.grid_height = 3
+
+	# 使用关卡配置
+	if current_level:
+		grid_layout.grid_width = current_level.grid_size.x
+		grid_layout.grid_height = current_level.grid_size.y
+		grid_layout.player_area_start = current_level.player_area_start
+		grid_layout.enemy_area_end = current_level.enemy_area_end
+	else:
+		grid_layout.grid_width = 3
+		grid_layout.grid_height = 3
+		grid_layout.player_area_start = 2
+		grid_layout.enemy_area_end = 1
+
 	grid_layout.cell_size = CELL_SIZE
-	grid_layout.player_area_start = 2
-	grid_layout.enemy_area_end = 1
 
 	grid_layout.unit_placed.connect(_on_unit_placed)
 	grid_layout.unit_removed.connect(_on_unit_removed)
@@ -91,22 +118,39 @@ func _connect_hud_signals() -> void:
 		continue_btn.pressed.connect(_on_continue_pressed)
 
 
-## 开始测试战斗
-func start_test_battle() -> void:
+## 开始战斗
+func start_battle() -> void:
 	# 清空现有单位
 	grid_layout.clear()
 	_clear_unit_nodes()
 
-	# 创建测试单位
-	_create_test_units()
+	# 加载玩家布局
+	_load_player_layout()
+
+	# 加载敌人
+	_load_enemies()
 
 	# 开始战斗
 	battle_manager.start_battle()
 
 
-## 创建测试单位
-func _create_test_units() -> void:
-	# 玩家单位
+## 加载玩家布局
+func _load_player_layout() -> void:
+	# 尝试从 GameManager 获取保存的布局
+	if GameManager.has_meta("battle_layout"):
+		var saved_layout = GameManager.get_meta("battle_layout") as GridLayout
+		if saved_layout:
+			# 复制玩家单位
+			for unit in saved_layout.get_player_units():
+				grid_layout.place_unit(unit, unit.grid_position)
+			return
+
+	# 如果没有保存的布局，使用测试单位
+	_create_test_player_units()
+
+
+## 创建测试玩家单位
+func _create_test_player_units() -> void:
 	var player_units = [
 		{"id": "unit_warrior", "pos": Vector2i(0, 2)},
 		{"id": "unit_archer", "pos": Vector2i(1, 2)},
@@ -119,7 +163,32 @@ func _create_test_units() -> void:
 			var instance = UnitInstance.create(def, data["pos"], true)
 			grid_layout.place_unit(instance, data["pos"])
 
-	# 敌人单位
+
+## 加载敌人
+func _load_enemies() -> void:
+	if current_level == null:
+		_create_test_enemies()
+		return
+
+	for spawn in current_level.enemy_spawns:
+		var unit_def = UnitDatabase.get_unit(spawn.unit_id)
+		if unit_def == null:
+			continue
+
+		var instance = UnitInstance.create(unit_def, spawn.position, false)
+
+		# 应用属性加成
+		instance.definition = unit_def.duplicate()
+		instance.definition.hp = int(unit_def.hp * spawn.level_modifier)
+		instance.definition.attack = int(unit_def.attack * spawn.level_modifier)
+		instance.current_hp = instance.get_max_hp()
+		instance.definition.display_name = "敌人%s" % unit_def.display_name
+
+		grid_layout.place_unit(instance, spawn.position)
+
+
+## 创建测试敌人
+func _create_test_enemies() -> void:
 	var enemy_def = UnitDatabase.get_unit("unit_warrior")
 	if enemy_def:
 		var enemy1 = UnitInstance.create(enemy_def, Vector2i(0, 0), false)
@@ -127,17 +196,10 @@ func _create_test_units() -> void:
 		enemy1.definition.display_name = "敌人战士"
 		grid_layout.place_unit(enemy1, Vector2i(0, 0))
 
-		var enemy2 = UnitInstance.create(enemy_def, Vector2i(1, 0), false)
+		var enemy2 = UnitInstance.create(enemy_def, Vector2i(2, 0), false)
 		enemy2.definition = enemy_def.duplicate()
-		enemy2.definition.display_name = "敌人弓手"
-		enemy2.definition.class_type = Global.ClassType.ARCHER
-		grid_layout.place_unit(enemy2, Vector2i(1, 0))
-
-		var enemy3 = UnitInstance.create(enemy_def, Vector2i(2, 0), false)
-		enemy3.definition = enemy_def.duplicate()
-		enemy3.definition.display_name = "敌人法师"
-		enemy3.definition.class_type = Global.ClassType.MAGE
-		grid_layout.place_unit(enemy3, Vector2i(2, 0))
+		enemy2.definition.display_name = "敌人战士"
+		grid_layout.place_unit(enemy2, Vector2i(2, 0))
 
 
 ## 单位放置回调
@@ -160,16 +222,12 @@ func _on_turn_completed(turn_number: int) -> void:
 
 ## 单位攻击回调
 func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int) -> void:
-	# 更新单位节点显示
 	_update_unit_node(target)
-
-	# 显示伤害数字
 	_show_damage_number(target.grid_position, damage, attacker.get_class_type() == Global.ClassType.HEALER)
 
 
 ## 单位死亡回调
 func _on_unit_died(unit: UnitInstance) -> void:
-	# 死亡动画
 	if unit_nodes.has(unit):
 		var node = unit_nodes[unit]
 		var tween = create_tween()
@@ -179,6 +237,22 @@ func _on_unit_died(unit: UnitInstance) -> void:
 
 ## 战斗结束回调
 func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
+	battle_victory = victory
+	battle_rewards = rewards
+
+	# 添加关卡奖励
+	if victory and current_level:
+		var gold_reward = current_level.gold_reward
+		rewards["gold"] = gold_reward
+		SaveManager.add_gold(gold_reward)
+
+		# 完成关卡
+		LevelDatabase.complete_level(current_level.id)
+
+		# 保存游戏
+		SaveManager.save_game()
+
+	# 更新 UI
 	var hud = $HUD
 	var result_panel = hud.get_node("ResultPanel")
 	var result_label = result_panel.get_node("VBoxContainer/ResultLabel")
@@ -218,15 +292,13 @@ func _clear_unit_nodes() -> void:
 ## 创建单位视觉节点
 func _create_unit_visual(unit: UnitInstance) -> Node2D:
 	var node = Node2D.new()
-	node.position = grid_layout.grid_to_screen(unit.grid_position, GRID_ORIGIN)
+	node.position = grid_layout.grid_to_screen(unit.grid_position, grid_origin)
 
-	# 创建简单的单位表示
 	var sprite = ColorRect.new()
 	sprite.size = Vector2(80, 80)
 	sprite.position = Vector2(-40, -40)
 	sprite.color = _get_unit_color(unit)
 
-	# HP 条
 	var hp_bar = ProgressBar.new()
 	hp_bar.position = Vector2(-35, -50)
 	hp_bar.size = Vector2(70, 10)
@@ -234,7 +306,6 @@ func _create_unit_visual(unit: UnitInstance) -> Node2D:
 	hp_bar.value = unit.current_hp
 	hp_bar.show_percentage = false
 
-	# 名称
 	var name_label = Label.new()
 	name_label.text = unit.definition.display_name
 	name_label.position = Vector2(-30, 40)
@@ -250,19 +321,19 @@ func _create_unit_visual(unit: UnitInstance) -> Node2D:
 ## 获取单位颜色
 func _get_unit_color(unit: UnitInstance) -> Color:
 	if not unit.is_player_unit:
-		return Color(0.8, 0.2, 0.2)  # 敌人红色
+		return Color(0.8, 0.2, 0.2)
 
 	match unit.get_class_type():
 		Global.ClassType.WARRIOR:
-			return Color(0.2, 0.6, 0.2)  # 绿色
+			return Color(0.2, 0.6, 0.2)
 		Global.ClassType.ARCHER:
-			return Color(0.2, 0.4, 0.8)  # 蓝色
+			return Color(0.2, 0.4, 0.8)
 		Global.ClassType.MAGE:
-			return Color(0.6, 0.2, 0.8)  # 紫色
+			return Color(0.6, 0.2, 0.8)
 		Global.ClassType.KNIGHT:
-			return Color(0.8, 0.6, 0.2)  # 金色
+			return Color(0.8, 0.6, 0.2)
 		Global.ClassType.HEALER:
-			return Color(0.2, 0.8, 0.8)  # 青色
+			return Color(0.2, 0.8, 0.8)
 
 	return Color(0.5, 0.5, 0.5)
 
@@ -280,7 +351,7 @@ func _update_unit_node(unit: UnitInstance) -> void:
 
 ## 显示伤害数字
 func _show_damage_number(position: Vector2i, damage: int, is_heal: bool) -> void:
-	var screen_pos = grid_layout.grid_to_screen(position, GRID_ORIGIN)
+	var screen_pos = grid_layout.grid_to_screen(position, grid_origin)
 
 	var label = Label.new()
 	label.text = str(damage)
@@ -294,7 +365,6 @@ func _show_damage_number(position: Vector2i, damage: int, is_heal: bool) -> void
 
 	add_child(label)
 
-	# 飘字动画
 	var tween = create_tween()
 	tween.tween_property(label, "position:y", label.position.y - 50, 1.0)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, 1.0)
@@ -338,6 +408,9 @@ func _on_speed_pressed() -> void:
 
 ## 继续按钮回调
 func _on_continue_pressed() -> void:
-	# 返回关卡选择或商店
-	GameManager.change_state(GameManager.GameState.LEVEL_SELECT)
-	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+	if battle_victory:
+		# 胜利后去商店
+		get_tree().change_scene_to_file("res://scenes/shop/shop_scene.tscn")
+	else:
+		# 失败后回关卡选择
+		get_tree().change_scene_to_file("res://scenes/level/level_select.tscn")

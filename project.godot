@@ -23,6 +23,7 @@ Global="*res://src/global.gd"
 GameManager="*res://src/autoload/game_manager.gd"
 SaveManager="*res://src/autoload/save_manager.gd"
 UnitDatabase="*res://src/autoload/unit_database.gd"
+LevelDatabase="*res://src/autoload/level_database.gd"
 
 [display]
 
