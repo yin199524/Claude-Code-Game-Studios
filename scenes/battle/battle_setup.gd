@@ -287,12 +287,12 @@ func _on_start_pressed() -> void:
 	_store_layout_for_battle()
 
 	# 切换到战斗场景
-	get_tree().change_scene_to_file("res://scenes/battle/battle_scene.tscn")
+	SceneTransition.change_scene("res://scenes/battle/battle_scene.tscn")
 
 
 ## 返回按钮
 func _on_back_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/level/level_select.tscn")
+	SceneTransition.change_scene("res://scenes/level/level_select.tscn")
 
 
 ## 保存布局供战斗使用

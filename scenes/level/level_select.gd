@@ -162,15 +162,15 @@ func _create_level_button(level: LevelDefinition) -> Control:
 func _on_level_selected(level_id: String) -> void:
 	selected_level_id = level_id
 	GameManager.current_level_id = level_id
-	get_tree().change_scene_to_file("res://scenes/battle/battle_setup.tscn")
+	SceneTransition.change_scene("res://scenes/battle/battle_setup.tscn")
 
 
 ## 返回按钮
 func _on_back_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+	SceneTransition.change_scene("res://scenes/main_menu.tscn")
 
 
 ## 商店按钮
 func _on_shop_pressed() -> void:
 	GameManager.enter_shop()
-	get_tree().change_scene_to_file("res://scenes/shop/shop_scene.tscn")
+	SceneTransition.change_scene("res://scenes/shop/shop_scene.tscn")

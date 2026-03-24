@@ -9,12 +9,79 @@ signal purchase_success(unit_id: String)
 ## 购买失败信号
 signal purchase_failed(reason: String)
 
+## 悬停提示面板
+var tooltip_panel: PanelContainer = null
+
+## 当前显示提示的单位
+var current_tooltip_unit: UnitDefinition = null
+
 
 func _ready() -> void:
+	_create_tooltip()
 	_connect_signals()
 	_update_gold_display()
 	_update_owned_count()
 	_populate_unit_list()
+
+
+## 创建悬停提示面板
+func _create_tooltip() -> void:
+	tooltip_panel = PanelContainer.new()
+	tooltip_panel.visible = false
+	tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tooltip_panel.z_index = 100
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.12, 0.18, 0.95)
+	style.border_color = Color(0.4, 0.5, 0.65, 1)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.shadow_color = Color(0, 0, 0, 0.5)
+	style.shadow_size = 8
+	style.shadow_offset = Vector2(3, 3)
+	tooltip_panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	tooltip_panel.add_child(vbox)
+
+	# 标题行
+	var title_row = HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	vbox.add_child(title_row)
+
+	var name_label = Label.new()
+	name_label.name = "UnitName"
+	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95, 1))
+	title_row.add_child(name_label)
+
+	var rarity_label = Label.new()
+	rarity_label.name = "UnitRarity"
+	rarity_label.add_theme_font_size_override("font_size", 12)
+	title_row.add_child(rarity_label)
+
+	# 分隔线
+	var separator = HSeparator.new()
+	separator.add_theme_stylebox_override("separator", StyleBoxEmpty.new())
+	vbox.add_child(separator)
+
+	# 属性容器
+	var stats_vbox = VBoxContainer.new()
+	stats_vbox.name = "StatsContainer"
+	stats_vbox.add_theme_constant_override("separation", 4)
+	vbox.add_child(stats_vbox)
+
+	# 技能描述
+	var skill_label = Label.new()
+	skill_label.name = "SkillDesc"
+	skill_label.add_theme_font_size_override("font_size", 12)
+	skill_label.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8, 1))
+	skill_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	skill_label.custom_minimum_size.x = 200
+	vbox.add_child(skill_label)
+
+	add_child(tooltip_panel)
 
 
 func _connect_signals() -> void:
@@ -173,7 +240,94 @@ func _create_unit_item(unit: UnitDefinition) -> Control:
 	buy_button.pressed.connect(_on_buy_pressed.bind(unit.id, unit.get_price()))
 	price_container.add_child(buy_button)
 
+	# 添加悬停事件
+	panel.mouse_entered.connect(_on_unit_hover_entered.bind(unit, panel))
+	panel.mouse_exited.connect(_on_unit_hover_exited)
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+
 	return panel
+
+
+## 单位悬停进入
+func _on_unit_hover_entered(unit: UnitDefinition, panel: Control) -> void:
+	current_tooltip_unit = unit
+	_update_tooltip_content(unit)
+
+	# 计算提示位置
+	var panel_rect = panel.get_global_rect()
+	var tooltip_pos = Vector2(panel_rect.position.x + panel_rect.size.x + 10, panel_rect.position.y)
+
+	# 检查是否超出屏幕
+	var screen_size = get_viewport().get_visible_rect().size
+	if tooltip_pos.x + 220 > screen_size.x:
+		tooltip_pos.x = panel_rect.position.x - 220
+
+	tooltip_panel.position = tooltip_pos
+	tooltip_panel.visible = true
+
+
+## 单位悬停退出
+func _on_unit_hover_exited() -> void:
+	tooltip_panel.visible = false
+	current_tooltip_unit = null
+
+
+## 更新提示内容
+func _update_tooltip_content(unit: UnitDefinition) -> void:
+	if tooltip_panel == null:
+		return
+
+	# 更新名称和稀有度
+	var name_label = tooltip_panel.get_node("VBoxContainer/UnitName") as Label
+	var rarity_label = tooltip_panel.get_node("VBoxContainer/UnitRarity") as Label
+
+	if name_label:
+		name_label.text = unit.display_name
+	if rarity_label:
+		rarity_label.text = Global.get_rarity_name(unit.rarity)
+		rarity_label.add_theme_color_override("font_color", _get_rarity_color(unit.rarity))
+
+	# 更新属性
+	var stats_container = tooltip_panel.get_node("VBoxContainer/StatsContainer") as VBoxContainer
+	if stats_container:
+		# 清空现有属性
+		for child in stats_container.get_children():
+			child.queue_free()
+
+		# 添加详细属性
+		_add_stat_row(stats_container, "职业", Global.get_class_name(unit.class_type), Color(0.6, 0.65, 0.7, 1))
+		_add_stat_row(stats_container, "生命值", "%d" % unit.get_effective_hp(), Color(0.9, 0.4, 0.4, 1))
+		_add_stat_row(stats_container, "攻击力", "%d" % unit.get_effective_attack(), Color(0.9, 0.7, 0.3, 1))
+		_add_stat_row(stats_container, "攻击速度", "%.1f" % unit.attack_speed, Color(0.5, 0.8, 0.5, 1))
+		_add_stat_row(stats_container, "攻击范围", "%d 格" % unit.attack_range, Color(0.5, 0.7, 0.9, 1))
+		_add_stat_row(stats_container, "护甲", "%d" % unit.armor, Color(0.7, 0.7, 0.8, 1))
+
+	# 更新技能描述
+	var skill_label = tooltip_panel.get_node("VBoxContainer/SkillDesc") as Label
+	if skill_label:
+		skill_label.text = unit.description if unit.description.length() > 0 else "无特殊技能"
+
+
+## 添加属性行
+func _add_stat_row(container: VBoxContainer, stat_name: String, value: String, color: Color) -> void:
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+
+	var name_label = Label.new()
+	name_label.text = stat_name
+	name_label.custom_minimum_size.x = 70
+	name_label.add_theme_font_size_override("font_size", 12)
+	name_label.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7, 1))
+	row.add_child(name_label)
+
+	var value_label = Label.new()
+	value_label.text = value
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_label.add_theme_font_size_override("font_size", 12)
+	value_label.add_theme_color_override("font_color", color)
+	row.add_child(value_label)
+
+	container.add_child(row)
 
 
 ## 获取职业图标
@@ -235,6 +389,11 @@ func _on_buy_pressed(unit_id: String, price: int) -> void:
 		purchase_failed.emit("购买失败")
 		return
 
+	# 显示金币飘字
+	var gold_display = $VBoxContainer/Header/GoldDisplay
+	var gold_pos = gold_display.get_global_rect().position + Vector2(30, 10)
+	SceneTransition.show_gold_floating_text(self, -price, gold_pos)
+
 	# 添加单位
 	SaveManager.add_unit(unit_id, 1)
 
@@ -250,4 +409,4 @@ func _on_buy_pressed(unit_id: String, price: int) -> void:
 ## 返回按钮
 func _on_back_pressed() -> void:
 	GameManager.enter_level_select()
-	get_tree().change_scene_to_file("res://scenes/level/level_select.tscn")
+	SceneTransition.change_scene("res://scenes/level/level_select.tscn")

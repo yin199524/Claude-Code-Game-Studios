@@ -56,6 +56,9 @@ extends Resource
 ## 商店基础价格（金币）
 @export var base_price: int = 50
 
+## 单位描述
+@export_multiline var description: String = ""
+
 ## 技能引用（暂时为空，技能系统后续实现）
 ## @export var skill: SkillDefinition
 @export var skill_id: String = ""

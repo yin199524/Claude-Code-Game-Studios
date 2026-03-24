@@ -241,8 +241,9 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	battle_rewards = rewards
 
 	# 添加关卡奖励
+	var gold_reward = 0
 	if victory and current_level:
-		var gold_reward = current_level.gold_reward
+		gold_reward = current_level.gold_reward
 		rewards["gold"] = gold_reward
 		SaveManager.add_gold(gold_reward)
 
@@ -270,7 +271,14 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 		result_label.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4, 1))
 		reward_label.text = "再接再厉!"
 
-	result_panel.visible = true
+	# 弹出动画
+	SceneTransition.popup_animation(result_panel)
+
+	# 金币飘字动画
+	if victory and gold_reward > 0:
+		await get_tree().create_timer(0.3).timeout
+		var screen_center = Vector2(360, 640)
+		SceneTransition.show_gold_floating_text(self, gold_reward, screen_center)
 
 
 ## 创建单位节点
@@ -415,7 +423,7 @@ func _on_speed_pressed() -> void:
 func _on_continue_pressed() -> void:
 	if battle_victory:
 		# 胜利后去商店
-		get_tree().change_scene_to_file("res://scenes/shop/shop_scene.tscn")
+		SceneTransition.change_scene("res://scenes/shop/shop_scene.tscn")
 	else:
 		# 失败后回关卡选择
-		get_tree().change_scene_to_file("res://scenes/level/level_select.tscn")
+		SceneTransition.change_scene("res://scenes/level/level_select.tscn")
