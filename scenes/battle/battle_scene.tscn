@@ -1,0 +1,84 @@
+[gd_scene load_steps=3 format=3 uid="uid://battle_scene"]
+
+[ext_resource type="Script" path="res://scenes/battle/battle_scene.gd" id="1_battle"]
+[ext_resource type="Script" path="res://scenes/battle/battle_hud.gd" id="2_hud"]
+
+[node name="BattleScene" type="Node2D"]
+script = ExtResource("1_battle")
+
+[node name="BattleGrid" type="Node2D" parent="."]
+
+[node name="PlayerArea" type="ColorRect" parent="BattleGrid"]
+offset_left = 50.0
+offset_top = 400.0
+offset_right = 370.0
+offset_bottom = 590.0
+color = Color(0.2, 0.4, 0.2, 0.3)
+
+[node name="EnemyArea" type="ColorRect" parent="BattleGrid"]
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 370.0
+offset_bottom = 240.0
+color = Color(0.4, 0.2, 0.2, 0.3)
+
+[node name="UnitsContainer" type="Node2D" parent="."]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("2_hud")
+
+[node name="TopBar" type="HBoxContainer" parent="HUD"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 50.0
+
+[node name="TurnLabel" type="Label" parent="HUD/TopBar"]
+layout_mode = 2
+text = "回合: 0"
+
+[node name="Spacer" type="Control" parent="HUD/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PauseButton" type="Button" parent="HUD/TopBar"]
+layout_mode = 2
+text = "暂停"
+
+[node name="SpeedButton" type="Button" parent="HUD/TopBar"]
+layout_mode = 2
+text = "1x"
+
+[node name="BottomBar" type="HBoxContainer" parent="HUD"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -60.0
+
+[node name="ResultPanel" type="PanelContainer" parent="HUD"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 100.0
+offset_top = 200.0
+offset_right = -100.0
+offset_bottom = -200.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/ResultPanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="ResultLabel" type="Label" parent="HUD/ResultPanel/VBoxContainer"]
+layout_mode = 2
+text = "战斗胜利!"
+horizontal_alignment = 1
+
+[node name="RewardLabel" type="Label" parent="HUD/ResultPanel/VBoxContainer"]
+layout_mode = 2
+text = "获得金币: 50"
+horizontal_alignment = 1
+
+[node name="ContinueButton" type="Button" parent="HUD/ResultPanel/VBoxContainer"]
+layout_mode = 2
+text = "继续"

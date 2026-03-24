@@ -1,0 +1,343 @@
+# battle_scene.gd - 战斗场景主脚本
+# 管理 BattleManager 和 UI 的交互
+
+extends Node2D
+
+## 回合时长（秒）
+const TURN_DURATION: float = 1.0
+
+## 格子大小
+const CELL_SIZE: int = 100
+
+## 网格原点
+const GRID_ORIGIN: Vector2 = Vector2(50, 50)
+
+## 战斗管理器
+var battle_manager: BattleManager = null
+
+## 网格布局
+var grid_layout: GridLayout = null
+
+## 单位场景
+var unit_scene: PackedScene = null
+
+## 单位节点映射
+var unit_nodes: Dictionary = {}
+
+## 是否战斗中
+var is_initialized: bool = false
+
+
+func _ready() -> void:
+	# 初始化网格布局
+	_setup_grid_layout()
+
+	# 初始化战斗管理器
+	_setup_battle_manager()
+
+	# 连接 HUD 信号
+	_connect_hud_signals()
+
+	is_initialized = true
+
+	# 自动开始测试战斗
+	start_test_battle()
+
+
+func _process(delta: float) -> void:
+	if battle_manager and battle_manager.is_battling:
+		battle_manager.update(delta)
+
+
+## 设置网格布局
+func _setup_grid_layout() -> void:
+	grid_layout = GridLayout.new()
+	grid_layout.grid_width = 3
+	grid_layout.grid_height = 3
+	grid_layout.cell_size = CELL_SIZE
+	grid_layout.player_area_start = 2
+	grid_layout.enemy_area_end = 1
+
+	grid_layout.unit_placed.connect(_on_unit_placed)
+	grid_layout.unit_removed.connect(_on_unit_removed)
+
+
+## 设置战斗管理器
+func _setup_battle_manager() -> void:
+	battle_manager = BattleManager.new()
+	battle_manager.initialize(grid_layout)
+	battle_manager.turn_duration = TURN_DURATION
+
+	battle_manager.turn_completed.connect(_on_turn_completed)
+	battle_manager.unit_attacked.connect(_on_unit_attacked)
+	battle_manager.unit_died.connect(_on_unit_died)
+	battle_manager.battle_ended.connect(_on_battle_ended)
+
+
+## 连接 HUD 信号
+func _connect_hud_signals() -> void:
+	var hud = $HUD
+	if hud.has_node("TopBar/PauseButton"):
+		var pause_btn = hud.get_node("TopBar/PauseButton")
+		pause_btn.pressed.connect(_on_pause_pressed)
+
+	if hud.has_node("TopBar/SpeedButton"):
+		var speed_btn = hud.get_node("TopBar/SpeedButton")
+		speed_btn.pressed.connect(_on_speed_pressed)
+
+	var result_panel = hud.get_node("ResultPanel")
+	if result_panel.has_node("VBoxContainer/ContinueButton"):
+		var continue_btn = result_panel.get_node("VBoxContainer/ContinueButton")
+		continue_btn.pressed.connect(_on_continue_pressed)
+
+
+## 开始测试战斗
+func start_test_battle() -> void:
+	# 清空现有单位
+	grid_layout.clear()
+	_clear_unit_nodes()
+
+	# 创建测试单位
+	_create_test_units()
+
+	# 开始战斗
+	battle_manager.start_battle()
+
+
+## 创建测试单位
+func _create_test_units() -> void:
+	# 玩家单位
+	var player_units = [
+		{"id": "unit_warrior", "pos": Vector2i(0, 2)},
+		{"id": "unit_archer", "pos": Vector2i(1, 2)},
+		{"id": "unit_mage", "pos": Vector2i(2, 2)}
+	]
+
+	for data in player_units:
+		var def = UnitDatabase.get_unit(data["id"])
+		if def:
+			var instance = UnitInstance.create(def, data["pos"], true)
+			grid_layout.place_unit(instance, data["pos"])
+
+	# 敌人单位
+	var enemy_def = UnitDatabase.get_unit("unit_warrior")
+	if enemy_def:
+		var enemy1 = UnitInstance.create(enemy_def, Vector2i(0, 0), false)
+		enemy1.definition = enemy_def.duplicate()
+		enemy1.definition.display_name = "敌人战士"
+		grid_layout.place_unit(enemy1, Vector2i(0, 0))
+
+		var enemy2 = UnitInstance.create(enemy_def, Vector2i(1, 0), false)
+		enemy2.definition = enemy_def.duplicate()
+		enemy2.definition.display_name = "敌人弓手"
+		enemy2.definition.class_type = Global.ClassType.ARCHER
+		grid_layout.place_unit(enemy2, Vector2i(1, 0))
+
+		var enemy3 = UnitInstance.create(enemy_def, Vector2i(2, 0), false)
+		enemy3.definition = enemy_def.duplicate()
+		enemy3.definition.display_name = "敌人法师"
+		enemy3.definition.class_type = Global.ClassType.MAGE
+		grid_layout.place_unit(enemy3, Vector2i(2, 0))
+
+
+## 单位放置回调
+func _on_unit_placed(unit: UnitInstance, position: Vector2i) -> void:
+	_create_unit_node(unit)
+
+
+## 单位移除回调
+func _on_unit_removed(unit: UnitInstance, position: Vector2i) -> void:
+	_remove_unit_node(unit)
+
+
+## 回合完成回调
+func _on_turn_completed(turn_number: int) -> void:
+	var hud = $HUD
+	if hud.has_node("TopBar/TurnLabel"):
+		var label = hud.get_node("TopBar/TurnLabel")
+		label.text = "回合: %d" % turn_number
+
+
+## 单位攻击回调
+func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int) -> void:
+	# 更新单位节点显示
+	_update_unit_node(target)
+
+	# 显示伤害数字
+	_show_damage_number(target.grid_position, damage, attacker.get_class_type() == Global.ClassType.HEALER)
+
+
+## 单位死亡回调
+func _on_unit_died(unit: UnitInstance) -> void:
+	# 死亡动画
+	if unit_nodes.has(unit):
+		var node = unit_nodes[unit]
+		var tween = create_tween()
+		tween.tween_property(node, "modulate:a", 0.0, 0.5)
+		tween.tween_callback(func(): _remove_unit_node(unit))
+
+
+## 战斗结束回调
+func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
+	var hud = $HUD
+	var result_panel = hud.get_node("ResultPanel")
+	var result_label = result_panel.get_node("VBoxContainer/ResultLabel")
+	var reward_label = result_panel.get_node("VBoxContainer/RewardLabel")
+
+	if victory:
+		result_label.text = "战斗胜利!"
+		reward_label.text = "获得金币: %d" % rewards.get("gold", 0)
+	else:
+		result_label.text = "战斗失败..."
+		reward_label.text = "再接再厉!"
+
+	result_panel.visible = true
+
+
+## 创建单位节点
+func _create_unit_node(unit: UnitInstance) -> void:
+	var node = _create_unit_visual(unit)
+	$UnitsContainer.add_child(node)
+	unit_nodes[unit] = node
+
+
+## 移除单位节点
+func _remove_unit_node(unit: UnitInstance) -> void:
+	if unit_nodes.has(unit):
+		var node = unit_nodes[unit]
+		node.queue_free()
+		unit_nodes.erase(unit)
+
+
+## 清空所有单位节点
+func _clear_unit_nodes() -> void:
+	for unit in unit_nodes.keys():
+		_remove_unit_node(unit)
+
+
+## 创建单位视觉节点
+func _create_unit_visual(unit: UnitInstance) -> Node2D:
+	var node = Node2D.new()
+	node.position = grid_layout.grid_to_screen(unit.grid_position, GRID_ORIGIN)
+
+	# 创建简单的单位表示
+	var sprite = ColorRect.new()
+	sprite.size = Vector2(80, 80)
+	sprite.position = Vector2(-40, -40)
+	sprite.color = _get_unit_color(unit)
+
+	# HP 条
+	var hp_bar = ProgressBar.new()
+	hp_bar.position = Vector2(-35, -50)
+	hp_bar.size = Vector2(70, 10)
+	hp_bar.max_value = unit.get_max_hp()
+	hp_bar.value = unit.current_hp
+	hp_bar.show_percentage = false
+
+	# 名称
+	var name_label = Label.new()
+	name_label.text = unit.definition.display_name
+	name_label.position = Vector2(-30, 40)
+	name_label.add_theme_font_size_override("font_size", 12)
+
+	node.add_child(sprite)
+	node.add_child(hp_bar)
+	node.add_child(name_label)
+
+	return node
+
+
+## 获取单位颜色
+func _get_unit_color(unit: UnitInstance) -> Color:
+	if not unit.is_player_unit:
+		return Color(0.8, 0.2, 0.2)  # 敌人红色
+
+	match unit.get_class_type():
+		Global.ClassType.WARRIOR:
+			return Color(0.2, 0.6, 0.2)  # 绿色
+		Global.ClassType.ARCHER:
+			return Color(0.2, 0.4, 0.8)  # 蓝色
+		Global.ClassType.MAGE:
+			return Color(0.6, 0.2, 0.8)  # 紫色
+		Global.ClassType.KNIGHT:
+			return Color(0.8, 0.6, 0.2)  # 金色
+		Global.ClassType.HEALER:
+			return Color(0.2, 0.8, 0.8)  # 青色
+
+	return Color(0.5, 0.5, 0.5)
+
+
+## 更新单位节点
+func _update_unit_node(unit: UnitInstance) -> void:
+	if not unit_nodes.has(unit):
+		return
+
+	var node = unit_nodes[unit]
+	var hp_bar = node.get_child(1) as ProgressBar
+	if hp_bar:
+		hp_bar.value = unit.current_hp
+
+
+## 显示伤害数字
+func _show_damage_number(position: Vector2i, damage: int, is_heal: bool) -> void:
+	var screen_pos = grid_layout.grid_to_screen(position, GRID_ORIGIN)
+
+	var label = Label.new()
+	label.text = str(damage)
+	label.position = screen_pos + Vector2(-20, -80)
+	label.add_theme_font_size_override("font_size", 24)
+
+	if is_heal:
+		label.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2))
+	else:
+		label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+
+	add_child(label)
+
+	# 飘字动画
+	var tween = create_tween()
+	tween.tween_property(label, "position:y", label.position.y - 50, 1.0)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 1.0)
+	tween.tween_callback(label.queue_free)
+
+
+## 暂停按钮回调
+func _on_pause_pressed() -> void:
+	var hud = $HUD
+	var pause_btn = hud.get_node("TopBar/PauseButton")
+
+	if battle_manager.is_paused:
+		battle_manager.resume_battle()
+		pause_btn.text = "暂停"
+	else:
+		battle_manager.pause_battle()
+		pause_btn.text = "继续"
+
+
+## 速度按钮回调
+func _on_speed_pressed() -> void:
+	var hud = $HUD
+	var speed_btn = hud.get_node("TopBar/SpeedButton")
+
+	var new_speed: float
+	var new_text: String
+
+	if battle_manager.battle_speed == 1.0:
+		new_speed = 2.0
+		new_text = "2x"
+	elif battle_manager.battle_speed == 2.0:
+		new_speed = 3.0
+		new_text = "3x"
+	else:
+		new_speed = 1.0
+		new_text = "1x"
+
+	battle_manager.set_battle_speed(new_speed)
+	speed_btn.text = new_text
+
+
+## 继续按钮回调
+func _on_continue_pressed() -> void:
+	# 返回关卡选择或商店
+	GameManager.change_state(GameManager.GameState.LEVEL_SELECT)
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")

@@ -1,0 +1,89 @@
+[gd_scene load_steps=2 format=3 uid="uid://battle_setup"]
+
+[ext_resource type="Script" path="res://scenes/battle/battle_setup.gd" id="1_setup"]
+
+[node name="BattleSetup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_setup")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 20.0
+offset_right = 100.0
+offset_bottom = 50.0
+text = "布局阶段"
+horizontal_alignment = 1
+
+[node name="GridContainer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -150.0
+offset_bottom = 150.0
+
+[node name="EnemyArea" type="ColorRect" parent="GridContainer"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 0.0
+offset_bottom = 100.0
+color = Color(0.4, 0.2, 0.2, 0.3)
+
+[node name="GridLines" type="Node2D" parent="GridContainer"]
+
+[node name="PlayerArea" type="ColorRect" parent="GridContainer"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -100.0
+color = Color(0.2, 0.4, 0.2, 0.3)
+
+[node name="UnitsContainer" type="Node2D" parent="GridContainer"]
+
+[node name="UnitList" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -100.0
+
+[node name="Label" type="Label" parent="UnitList"]
+layout_mode = 2
+text = "可用单位:"
+
+[node name="Units" type="HBoxContainer" parent="UnitList"]
+layout_mode = 2
+
+[node name="BottomBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -50.0
+
+[node name="ClearButton" type="Button" parent="BottomBar"]
+layout_mode = 2
+text = "清空"
+
+[node name="Spacer" type="Control" parent="BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StartButton" type="Button" parent="BottomBar"]
+layout_mode = 2
+text = "开始战斗"
