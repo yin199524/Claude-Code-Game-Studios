@@ -119,6 +119,34 @@ func _create_level_button(level: LevelDefinition) -> Control:
 	enemy_stat.add_theme_color_override("font_color", Color(0.9, 0.5, 0.5, 1) if is_unlocked else Color(0.4, 0.4, 0.45, 1))
 	stats_hbox.add_child(enemy_stat)
 
+	# 敌人类型图标预览
+	var enemy_icons = HBoxContainer.new()
+	enemy_icons.add_theme_constant_override("separation", 2)
+	stats_hbox.add_child(enemy_icons)
+
+	# 收集敌人类型
+	var enemy_types: Dictionary = {}
+	for spawn in level.enemy_spawns:
+		var unit_def = UnitDatabase.get_unit(spawn.unit_id)
+		if unit_def:
+			if not enemy_types.has(spawn.unit_id):
+				enemy_types[spawn.unit_id] = {"count": 0, "def": unit_def}
+			enemy_types[spawn.unit_id]["count"] += 1
+
+	# 显示敌人图标（最多显示3种）
+	var type_count = 0
+	for unit_id in enemy_types.keys():
+		if type_count >= 3:
+			break
+		var enemy_data = enemy_types[unit_id]
+		var icon_label = Label.new()
+		icon_label.text = _get_unit_class_icon(enemy_data["def"].class_type)
+		icon_label.add_theme_font_size_override("font_size", 14)
+		if not is_unlocked:
+			icon_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.45, 1))
+		enemy_icons.add_child(icon_label)
+		type_count += 1
+
 	var reward_stat = Label.new()
 	reward_stat.text = "奖励: %d 金币" % level.gold_reward
 	reward_stat.add_theme_font_size_override("font_size", 12)
@@ -174,3 +202,19 @@ func _on_back_pressed() -> void:
 func _on_shop_pressed() -> void:
 	GameManager.enter_shop()
 	SceneTransition.change_scene("res://scenes/shop/shop_scene.tscn")
+
+
+## 获取单位职业图标
+func _get_unit_class_icon(class_type: Global.ClassType) -> String:
+	match class_type:
+		Global.ClassType.WARRIOR:
+			return "🗡"
+		Global.ClassType.ARCHER:
+			return "🏹"
+		Global.ClassType.MAGE:
+			return "🔮"
+		Global.ClassType.KNIGHT:
+			return "🛡"
+		Global.ClassType.HEALER:
+			return "💚"
+	return "?"

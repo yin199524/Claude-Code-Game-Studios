@@ -225,6 +225,38 @@ func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int
 	_update_unit_node(target)
 	_show_damage_number(target.grid_position, damage, attacker.get_class_type() == Global.ClassType.HEALER)
 
+	# 攻击动画
+	_play_attack_animation(attacker, target)
+
+
+## 播放攻击动画
+func _play_attack_animation(attacker: UnitInstance, target: UnitInstance) -> void:
+	if not unit_nodes.has(attacker):
+		return
+
+	var attacker_node = unit_nodes[attacker]
+	var original_pos = attacker_node.position
+
+	# 计算攻击方向
+	var target_screen_pos = grid_layout.grid_to_screen(target.grid_position, grid_origin)
+	var direction = (target_screen_pos - original_pos).normalized()
+
+	# 冲向目标
+	var tween = create_tween()
+	var attack_offset = direction * 20
+
+	tween.tween_property(attacker_node, "position", original_pos + attack_offset, 0.1)
+	tween.tween_property(attacker_node, "position", original_pos, 0.15)
+
+	# 目标抖动
+	if unit_nodes.has(target):
+		var target_node = unit_nodes[target]
+		var target_original_pos = target_node.position
+		var shake_tween = create_tween()
+		shake_tween.tween_property(target_node, "position", target_original_pos + Vector2(5, 0), 0.05)
+		shake_tween.tween_property(target_node, "position", target_original_pos - Vector2(5, 0), 0.05)
+		shake_tween.tween_property(target_node, "position", target_original_pos, 0.05)
+
 
 ## 单位死亡回调
 func _on_unit_died(unit: UnitInstance) -> void:
@@ -274,10 +306,16 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	# 弹出动画
 	SceneTransition.popup_animation(result_panel)
 
+	# 粒子效果
+	var screen_center = Vector2(360, 640)
+	if victory:
+		ParticleEffects.create_victory_particles(self, screen_center)
+	else:
+		ParticleEffects.create_defeat_particles(self, screen_center)
+
 	# 金币飘字动画
 	if victory and gold_reward > 0:
 		await get_tree().create_timer(0.3).timeout
-		var screen_center = Vector2(360, 640)
 		SceneTransition.show_gold_floating_text(self, gold_reward, screen_center)
 
 

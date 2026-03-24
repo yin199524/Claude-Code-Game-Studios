@@ -25,6 +25,7 @@ SaveManager="*res://src/autoload/save_manager.gd"
 UnitDatabase="*res://src/autoload/unit_database.gd"
 LevelDatabase="*res://src/autoload/level_database.gd"
 SceneTransition="*res://src/autoload/scene_transition.gd"
+ParticleEffects="*res://src/autoload/particle_effects.gd"
 
 [display]
 
