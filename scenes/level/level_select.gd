@@ -188,6 +188,7 @@ func _create_level_button(level: LevelDefinition) -> Control:
 
 ## 关卡选中
 func _on_level_selected(level_id: String) -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	selected_level_id = level_id
 	GameManager.current_level_id = level_id
 	SceneTransition.change_scene("res://scenes/battle/battle_setup.tscn")
@@ -195,11 +196,13 @@ func _on_level_selected(level_id: String) -> void:
 
 ## 返回按钮
 func _on_back_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	SceneTransition.change_scene("res://scenes/main_menu.tscn")
 
 
 ## 商店按钮
 func _on_shop_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	GameManager.enter_shop()
 	SceneTransition.change_scene("res://scenes/shop/shop_scene.tscn")
 

@@ -272,6 +272,7 @@ func _get_unit_color(unit: UnitInstance) -> Color:
 
 ## 清空按钮
 func _on_clear_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	grid_layout.clear_player_units()
 	placed_count = 0
 
@@ -283,6 +284,8 @@ func _on_start_pressed() -> void:
 		print("请至少放置一个单位")
 		return
 
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
+
 	# 保存布局到全局（用于战斗场景）
 	_store_layout_for_battle()
 
@@ -292,6 +295,7 @@ func _on_start_pressed() -> void:
 
 ## 返回按钮
 func _on_back_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	SceneTransition.change_scene("res://scenes/level/level_select.tscn")
 
 

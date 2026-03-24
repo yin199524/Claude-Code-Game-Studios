@@ -380,14 +380,19 @@ func _get_rarity_color(rarity: Global.Rarity) -> Color:
 func _on_buy_pressed(unit_id: String, price: int) -> void:
 	# 再次检查余额
 	if not SaveManager.can_afford(price):
+		SoundManager.play_sfx(SoundManager.SFX.PURCHASE_FAIL)
 		purchase_failed.emit("金币不足")
 		return
 
 	# 扣除金币
 	var success = SaveManager.spend_gold(price)
 	if not success:
+		SoundManager.play_sfx(SoundManager.SFX.PURCHASE_FAIL)
 		purchase_failed.emit("购买失败")
 		return
+
+	# 播放购买成功音效
+	SoundManager.play_sfx(SoundManager.SFX.PURCHASE_SUCCESS)
 
 	# 显示金币飘字
 	var gold_display = $VBoxContainer/Header/GoldDisplay
@@ -408,5 +413,6 @@ func _on_buy_pressed(unit_id: String, price: int) -> void:
 
 ## 返回按钮
 func _on_back_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	GameManager.enter_level_select()
 	SceneTransition.change_scene("res://scenes/level/level_select.tscn")

@@ -130,6 +130,9 @@ func start_battle() -> void:
 	# 加载敌人
 	_load_enemies()
 
+	# 播放战斗开始音效
+	SoundManager.play_sfx(SoundManager.SFX.BATTLE_START)
+
 	# 开始战斗
 	battle_manager.start_battle()
 
@@ -225,6 +228,9 @@ func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int
 	_update_unit_node(target)
 	_show_damage_number(target.grid_position, damage, attacker.get_class_type() == Global.ClassType.HEALER)
 
+	# 攻击音效
+	SoundManager.play_sfx(SoundManager.SFX.UNIT_ATTACK)
+
 	# 攻击动画
 	_play_attack_animation(attacker, target)
 
@@ -260,6 +266,9 @@ func _play_attack_animation(attacker: UnitInstance, target: UnitInstance) -> voi
 
 ## 单位死亡回调
 func _on_unit_died(unit: UnitInstance) -> void:
+	# 播放死亡音效
+	SoundManager.play_sfx(SoundManager.SFX.UNIT_DEATH)
+
 	if unit_nodes.has(unit):
 		var node = unit_nodes[unit]
 		var tween = create_tween()
@@ -271,6 +280,12 @@ func _on_unit_died(unit: UnitInstance) -> void:
 func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	battle_victory = victory
 	battle_rewards = rewards
+
+	# 播放胜利/失败音效
+	if victory:
+		SoundManager.play_sfx(SoundManager.SFX.BATTLE_VICTORY)
+	else:
+		SoundManager.play_sfx(SoundManager.SFX.BATTLE_DEFEAT)
 
 	# 添加关卡奖励
 	var gold_reward = 0
@@ -316,6 +331,7 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	# 金币飘字动画
 	if victory and gold_reward > 0:
 		await get_tree().create_timer(0.3).timeout
+		SoundManager.play_sfx(SoundManager.SFX.GOLD_GAIN)
 		SceneTransition.show_gold_floating_text(self, gold_reward, screen_center)
 
 
@@ -459,6 +475,7 @@ func _on_speed_pressed() -> void:
 
 ## 继续按钮回调
 func _on_continue_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	if battle_victory:
 		# 胜利后去商店
 		SceneTransition.change_scene("res://scenes/shop/shop_scene.tscn")

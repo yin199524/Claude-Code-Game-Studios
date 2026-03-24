@@ -59,14 +59,16 @@ func _animate_decor(delta: float) -> void:
 
 
 func _on_start_pressed() -> void:
-	# 进入关卡选择
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	GameManager.enter_level_select()
 	SceneTransition.change_scene("res://scenes/level/level_select.tscn")
 
 
 func _on_settings_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	GameManager.enter_settings()
 
 
 func _on_quit_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	get_tree().quit()
