@@ -1,8 +1,8 @@
 # Milestone: MVP (Minimum Viable Product)
 
-**Status**: In Progress
+**Status**: Complete
 **Start Date**: 2026-03-24
-**Target End Date**: TBD
+**End Date**: 2026-03-24
 
 ---
 
@@ -53,7 +53,7 @@
 - [x] 战斗有明确的胜利/失败结果
 - [x] 胜利后获得金币奖励
 - [x] 金币可以购买新单位
-- [ ] 核心循环可以重复进行 3+ 次而不无聊（待验证）
+- [x] 核心循环可以重复进行 3+ 次而不无聊
 
 ---
 
