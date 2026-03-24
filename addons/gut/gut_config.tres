@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="GutConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/gut/gut_config.gd" id="1_config"]
+
+[resource]
+script = ExtResource("1_config")
+# 测试目录配置
+dirs = ["res://tests/unit/"]
+# 是否在启动时运行测试
+run_on_load = false
+# 是否显示测试结果窗口
+should_maximize = false
+# 测试输出目录
+output_dir = "user://gut_output"
+# 日志级别: 0=error, 1=warning, 2=info, 3=debug
+log_level = 2
+# 是否在测试失败时暂停
+pause_on_error = false
+# 是否忽略暂停
+ignore_pauses = false
+# 测试文件后缀
+file_prefix = "test_"
+file_extension = ".gd"
+# 内部测试文件后缀
+inner_class_prefix = "Test"
+# 颜色设置
+compact_mode = false
+show_orphans = true

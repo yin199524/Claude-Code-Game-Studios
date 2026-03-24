@@ -1,0 +1,17 @@
+; PROTOTYPE - NOT FOR PRODUCTION
+; Question: Is the '布局 → 观战 → 收集奖励' core loop engaging enough?
+; Date: 2026-03-24
+
+[gd_scene load_steps=3 format=3 uid="uid://prototype_auto_battle"]
+
+[ext_resource type="Script" path="res://prototypes/auto-battle/battle_manager.gd" id="1_battle"]
+[ext_resource type="Script" path="res://prototypes/auto-battle/unit.gd" id="2_unit"]
+
+[node name="Main" type="Node2D"]
+
+[node name="BattleManager" type="Node" parent="."]
+script = ExtResource("1_battle")
+
+[node name="GridUI" type="Node2D" parent="."]
+
+[node name="UnitSpawner" type="Node" parent="."]
