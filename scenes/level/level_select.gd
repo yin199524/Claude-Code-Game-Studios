@@ -305,7 +305,7 @@ func _on_start_battle_pressed() -> void:
 	SceneTransition.change_scene("res://scenes/battle/battle_setup.tscn")
 
 
-## 填充关卡列表
+## 填充关卡列表（按世界分组）
 func _populate_level_list() -> void:
 	var list = $VBoxContainer/LevelList/LevelListContent
 
@@ -316,28 +316,125 @@ func _populate_level_list() -> void:
 	# 等待子节点释放
 	await get_tree().process_frame
 
-	# 添加所有关卡
-	var levels = LevelDatabase.get_all_levels()
-	levels.sort_custom(func(a, b): return a.difficulty < b.difficulty)
+	# 按世界分组显示关卡
+	var worlds = WorldDatabase.get_all_worlds()
 
-	for level in levels:
-		var btn = _create_level_button(level)
-		list.add_child(btn)
+	for world in worlds:
+		# 跳过没有关卡的世界（预留内容）
+		if world.level_ids.is_empty():
+			continue
+		var world_section = _create_world_section(world)
+		list.add_child(world_section)
+
+
+## 创建世界分区
+func _create_world_section(world: WorldDefinition) -> Control:
+	var is_unlocked = WorldDatabase.is_world_unlocked(world.id)
+	var is_completed = WorldDatabase.is_world_completed(world.id)
+	var progress = WorldDatabase.get_world_progress(world.id)
+
+	# 外层容器
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+
+	# 世界标题栏
+	var header = PanelContainer.new()
+	header.custom_minimum_size.y = 60
+
+	var header_style = StyleBoxFlat.new()
+	header_style.bg_color = world.get_theme_color() if is_unlocked else Color(0.15, 0.17, 0.2, 1)
+	header_style.set_corner_radius_all(10)
+	header.add_theme_stylebox_override("panel", header_style)
+
+	var header_hbox = HBoxContainer.new()
+	header_hbox.add_theme_constant_override("separation", 12)
+	header.add_child(header_hbox)
+
+	# 主题图标
+	var icon_label = Label.new()
+	icon_label.text = world.get_theme_icon()
+	icon_label.add_theme_font_size_override("font_size", 28)
+	header_hbox.add_child(icon_label)
+
+	# 世界名称
+	var name_label = Label.new()
+	name_label.text = world.display_name
+	name_label.add_theme_font_size_override("font_size", 22)
+	name_label.add_theme_color_override("font_color", Color(1, 1, 1, 1) if is_unlocked else Color(0.5, 0.55, 0.6, 1))
+	header_hbox.add_child(name_label)
+
+	# 进度/状态
+	if is_unlocked:
+		var progress_label = Label.new()
+		progress_label.text = "%d/%d ⭐%d" % [progress.completed, progress.total, progress.stars]
+		progress_label.add_theme_font_size_override("font_size", 14)
+		progress_label.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+		header_hbox.add_child(progress_label)
+
+		if is_completed:
+			var complete_label = Label.new()
+			complete_label.text = "✓"
+			complete_label.add_theme_font_size_override("font_size", 20)
+			complete_label.add_theme_color_override("font_color", Color(0.2, 0.85, 0.3, 1))
+			header_hbox.add_child(complete_label)
+	else:
+		var lock_label = Label.new()
+		lock_label.text = "🔒"
+		lock_label.add_theme_font_size_override("font_size", 20)
+		header_hbox.add_child(lock_label)
+
+	vbox.add_child(header)
+
+	# 世界描述
+	var desc_label = Label.new()
+	desc_label.text = world.description if is_unlocked else "完成前置世界解锁"
+	desc_label.add_theme_font_size_override("font_size", 12)
+	desc_label.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8, 1) if is_unlocked else Color(0.4, 0.45, 0.5, 1))
+	desc_label.add_theme_constant_override("offset_left", 10)
+	vbox.add_child(desc_label)
+
+	# 关卡列表（仅显示已解锁世界）
+	if is_unlocked:
+		for level_id in world.level_ids:
+			var level = LevelDatabase.get_level(level_id)
+			if level:
+				var level_btn = _create_level_button(level, world)
+				vbox.add_child(level_btn)
+
+	# 完成奖励提示
+	if is_completed:
+		var reward_label = Label.new()
+		reward_label.text = "🏆 完成奖励: %d 金币已领取" % world.completion_gold
+		reward_label.add_theme_font_size_override("font_size", 12)
+		reward_label.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+		reward_label.add_theme_constant_override("offset_left", 10)
+		vbox.add_child(reward_label)
+
+	# 分隔线
+	var separator = Control.new()
+	separator.custom_minimum_size.y = 15
+	vbox.add_child(separator)
+
+	return vbox
 
 
 ## 创建关卡按钮
-func _create_level_button(level: LevelDefinition) -> Control:
+func _create_level_button(level: LevelDefinition, world: WorldDefinition = null) -> Control:
 	# 外层容器（用于边框和阴影）
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size.y = 100
+	panel.custom_minimum_size.y = 90
 
 	var is_unlocked = LevelDatabase.is_level_unlocked(level.id)
 	var is_completed = LevelDatabase.is_level_completed(level.id)
+	var stars = SaveManager.get_level_stars(level.id)
+
+	# 世界主题色（用于边框）
+	var theme_color = world.get_theme_color() if world else Color(0.4, 0.5, 0.65, 1)
 
 	# 创建样式
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.18, 0.22, 0.3, 1) if is_unlocked else Color(0.12, 0.14, 0.18, 1)
-	style.border_color = Color(0.4, 0.5, 0.65, 1) if is_unlocked else Color(0.2, 0.25, 0.3, 1)
+	style.border_color = theme_color if is_unlocked else Color(0.2, 0.25, 0.3, 1)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(10)
 	style.shadow_color = Color(0, 0, 0, 0.25)
@@ -437,21 +534,27 @@ func _create_level_button(level: LevelDefinition) -> Control:
 	status_container.custom_minimum_size.x = 90
 	container.add_child(status_container)
 
-	var status_label = Label.new()
-	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	status_label.add_theme_font_size_override("font_size", 16)
-
 	if is_completed:
-		status_label.text = "✓ 已完成"
-		status_label.add_theme_color_override("font_color", Color(0.2, 0.85, 0.3, 1))
+		# 显示星级
+		var star_label = Label.new()
+		star_label.text = _get_star_display(stars)
+		star_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		star_label.add_theme_font_size_override("font_size", 18)
+		status_container.add_child(star_label)
 	elif is_unlocked:
+		var status_label = Label.new()
 		status_label.text = "▶ 开始"
+		status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		status_label.add_theme_font_size_override("font_size", 16)
 		status_label.add_theme_color_override("font_color", Color(0.3, 0.8, 0.9, 1))
+		status_container.add_child(status_label)
 	else:
+		var status_label = Label.new()
 		status_label.text = "🔒 锁定"
+		status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		status_label.add_theme_font_size_override("font_size", 14)
 		status_label.add_theme_color_override("font_color", Color(0.4, 0.45, 0.5, 1))
-
-	status_container.add_child(status_label)
+		status_container.add_child(status_label)
 
 	# 点击事件
 	if is_unlocked:
@@ -483,6 +586,18 @@ func _on_shop_pressed() -> void:
 	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	GameManager.enter_shop()
 	SceneTransition.change_scene("res://scenes/shop/shop_scene.tscn")
+
+
+## 获取星级显示文本
+func _get_star_display(stars: int) -> String:
+	match stars:
+		3:
+			return "⭐⭐⭐"
+		2:
+			return "⭐⭐"
+		1:
+			return "⭐"
+	return ""
 
 
 ## 获取单位职业图标

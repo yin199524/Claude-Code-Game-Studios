@@ -35,60 +35,19 @@ func load_worlds() -> void:
 
 ## 创建 Alpha 阶段的 5 个世界
 func _create_alpha_worlds() -> void:
-	# 世界 1: 翠绿森林
+	# 世界 1: 翠绿森林 (包含当前所有可用关卡)
 	var forest = WorldDefinition.new()
 	forest.id = "world_forest"
 	forest.display_name = "翠绿森林"
 	forest.theme = WorldDefinition.WorldTheme.FOREST
-	forest.level_ids = ["level_001", "level_002", "level_003", "level_004"]
+	forest.level_ids = ["level_001", "level_002", "level_003", "level_004", "level_005"]
 	forest.unlock_world_id = ""  # 初始解锁
 	forest.description = "宁静的森林，新手冒险的起点"
 	forest.completion_gold = 200
 	_register_world(forest)
 
-	# 世界 2: 灼热沙漠
-	var desert = WorldDefinition.new()
-	desert.id = "world_desert"
-	desert.display_name = "灼热沙漠"
-	desert.theme = WorldDefinition.WorldTheme.DESERT
-	desert.level_ids = ["level_005", "level_006", "level_007", "level_008"]
-	desert.unlock_world_id = "world_forest"
-	desert.description = "炎热的沙漠，高护甲敌人的领地"
-	desert.completion_gold = 300
-	_register_world(desert)
-
-	# 世界 3: 寒冰冻土
-	var ice = WorldDefinition.new()
-	ice.id = "world_ice"
-	ice.display_name = "寒冰冻土"
-	ice.theme = WorldDefinition.WorldTheme.ICE
-	ice.level_ids = ["level_009", "level_010", "level_011", "level_012"]
-	ice.unlock_world_id = "world_desert"
-	ice.description = "冰封的土地，减速效果的危险区域"
-	ice.completion_gold = 400
-	_register_world(ice)
-
-	# 世界 4: 烈焰火山
-	var volcano = WorldDefinition.new()
-	volcano.id = "world_volcano"
-	volcano.display_name = "烈焰火山"
-	volcano.theme = WorldDefinition.WorldTheme.VOLCANO
-	volcano.level_ids = ["level_013", "level_014", "level_015", "level_016"]
-	volcano.unlock_world_id = "world_ice"
-	volcano.description = "熔岩流淌，高伤害敌人的巢穴"
-	volcano.completion_gold = 500
-	_register_world(volcano)
-
-	# 世界 5: 暗影深渊
-	var shadow = WorldDefinition.new()
-	shadow.id = "world_shadow"
-	shadow.display_name = "暗影深渊"
-	shadow.theme = WorldDefinition.WorldTheme.SHADOW
-	shadow.level_ids = ["level_017", "level_018", "level_019", "level_020"]
-	shadow.unlock_world_id = "world_volcano"
-	shadow.description = "黑暗的深渊，最终 Boss 的领域"
-	shadow.completion_gold = 1000
-	_register_world(shadow)
+	# 世界 2-5: 预留 (内容扩展时填充)
+	# 目前仅显示第一个世界，后续世界将在 Sprint 9 内容扩展时添加
 
 
 ## 注册世界
