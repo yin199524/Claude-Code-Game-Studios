@@ -23,11 +23,11 @@
 | T1 | 成就系统数据结构设计 | game-designer | 0.5 | — | ✅ Complete |
 | T2 | 成就管理器实现 | gameplay-programmer | 1.0 | T1 | ✅ Complete |
 | T3 | 成就解锁检测逻辑 | gameplay-programmer | 0.5 | T2 | ✅ Complete |
-| T4 | 成就 UI 面板 | ui-programmer | 0.75 | T2 | 🔲 Pending |
+| T4 | 成就 UI 面板 | ui-programmer | 0.75 | T2 | ✅ Complete |
 | T5 | 每日任务系统设计 | game-designer | 0.5 | — | ✅ Complete |
 | T6 | 每日任务管理器实现 | gameplay-programmer | 0.75 | T5 | ✅ Complete |
 | T7 | 任务刷新和奖励发放 | gameplay-programmer | 0.5 | T6 | ✅ Complete |
-| T8 | 每日任务 UI | ui-programmer | 0.5 | T6 | 🔲 Pending |
+| T8 | 每日任务 UI | ui-programmer | 0.5 | T6 | ✅ Complete |
 
 **Total Must Have: 5.5 days**
 
@@ -35,9 +35,9 @@
 
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Status |
 |----|------|-------------|-----------|--------------|--------|
-| T9 | 主菜单 UI 增强 | ui-programmer | 1.0 | — | 🔲 Pending |
+| T9 | 主菜单 UI 增强 | ui-programmer | 1.0 | — | ✅ Complete |
 | T10 | 商店 UI 增强 | ui-programmer | 0.75 | — | 🔲 Pending |
-| T11 | 成就通知弹窗 | ui-programmer | 0.5 | T4 | 🔲 Pending |
+| T11 | 成就通知弹窗 | ui-programmer | 0.5 | T4 | ✅ Complete |
 | T12 | 进度系统整合 | gameplay-programmer | 0.5 | T2, T6 | 🔲 Pending |
 
 **Total Should Have: 2.75 days**
