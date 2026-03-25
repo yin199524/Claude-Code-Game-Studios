@@ -18,20 +18,20 @@
 
 | # | System | Category | Status | Dependencies |
 |---|--------|----------|--------|--------------|
-| 1 | 新手引导系统 | Presentation | 🔲 Pending | UI 系统 ✅ |
+| 1 | 新手引导系统 | Presentation | ✅ Complete | UI 系统 ✅ |
 | 2 | 战斗动画优化 | Presentation | 🔲 Pending | 战斗系统 ✅ |
 | 3 | 性能优化 | Technical | 🔲 Pending | 核心系统 ✅ |
 | 4 | 错误处理增强 | Technical | 🔲 Pending | 全系统 |
-| 5 | 全面测试执行 | QA | 🔲 Pending | 所有系统 ✅ |
+| 5 | 全面测试执行 | QA | 🔄 In Progress | 所有系统 ✅ |
 
 ### Quality Improvements
 
-| Area | Alpha State | Beta Target |
-|------|-------------|-------------|
-| 新手引导 | 无 | 完整教程流程 |
-| 性能 | 未优化 | < 2s 加载，稳定 60 FPS |
-| 测试覆盖 | 检查清单未执行 | 100% 执行通过 |
-| 错误处理 | 基础 | 友好提示 + 恢复机制 |
+| Area | Alpha State | Beta Target | Current |
+|------|-------------|-------------|---------|
+| 新手引导 | 无 | 完整教程流程 | ✅ 完成 |
+| 性能 | 未优化 | < 2s 加载，稳定 60 FPS | 🔲 待优化 |
+| 测试覆盖 | 检查清单未执行 | 100% 执行通过 | 🔄 单元测试就绪 |
+| 错误处理 | 基础 | 友好提示 + 恢复机制 | 🔲 待增强 |
 
 ### New Features
 
@@ -84,9 +84,9 @@
 
 | Sprint | Focus | Target |
 |--------|-------|--------|
-| Sprint 12 | 新手引导 + 测试执行 | 用户体验 |
-| Sprint 13 | 性能优化 + 动画增强 | 性能提升 |
-| Sprint 14 | 错误处理 + 最终打磨 | 发布准备 |
+| Sprint 12 | 新手引导 + 测试执行 | ✅ Complete |
+| Sprint 13 | 性能优化 + 动画增强 | 🔲 Planned |
+| Sprint 14 | 错误处理 + 最终打磨 | 🔲 Planned |
 
 ---
 
