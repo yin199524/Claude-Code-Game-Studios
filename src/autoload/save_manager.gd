@@ -7,6 +7,12 @@ extends Node
 ## 存档文件路径
 const SAVE_PATH: String = "user://save_data.tres"
 
+## 备份存档路径
+const BACKUP_PATH: String = "user://save_data_backup.tres"
+
+## 最大备份数
+const MAX_BACKUPS: int = 3
+
 ## 玩家数据
 var player_data: PlayerData = null
 
@@ -31,6 +37,10 @@ func create_new_save() -> void:
 func load_game() -> bool:
 	# 检查存档文件是否存在
 	if not FileAccess.file_exists(SAVE_PATH):
+		# 尝试加载备份
+		if _try_load_backup():
+			data_loaded.emit()
+			return true
 		# 创建新存档
 		create_new_save()
 		data_loaded.emit()
@@ -49,11 +59,34 @@ func load_game() -> bool:
 		data_loaded.emit()
 		return true
 	else:
-		# 存档损坏，创建新存档
-		push_warning("存档文件损坏，创建新存档")
+		# 主存档损坏，尝试备份
+		push_warning("主存档文件损坏")
+		if _try_load_backup():
+			data_loaded.emit()
+			return true
+		# 创建新存档
+		push_warning("无法恢复备份，创建新存档")
 		create_new_save()
 		data_loaded.emit()
 		return false
+
+
+## 尝试加载备份存档
+func _try_load_backup() -> bool:
+	if not FileAccess.file_exists(BACKUP_PATH):
+		return false
+
+	var loaded = load(BACKUP_PATH)
+	if loaded is PlayerData:
+		player_data = loaded
+		var result = player_data.validate()
+		if result[0]:
+			push_warning("从备份存档恢复成功")
+			# 立即保存到主存档
+			save_game()
+			return true
+
+	return false
 
 
 ## 保存游戏

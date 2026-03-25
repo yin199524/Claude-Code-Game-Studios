@@ -146,7 +146,7 @@ func _create_levels() -> void:
 	level6.player_unit_limit = 5
 	level6.player_area_start = 2
 	level6.enemy_area_end = 1
-	level6.gold_reward = 200
+	level6.gold_reward = 320  # 经济平衡: 200 -> 320 (保持递增)
 	level6.required_level = "level_005"
 	level6.enemy_spawns = [
 		EnemySpawn.create("enemy_scorpion", Vector2i(0, 0), 1.0),
@@ -164,7 +164,7 @@ func _create_levels() -> void:
 	level7.player_unit_limit = 5
 	level7.player_area_start = 2
 	level7.enemy_area_end = 1
-	level7.gold_reward = 250
+	level7.gold_reward = 350  # 经济平衡: 250 -> 350
 	level7.required_level = "level_006"
 	level7.enemy_spawns = [
 		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 0.95),      # 平衡调整: 1.0 -> 0.95
@@ -183,7 +183,7 @@ func _create_levels() -> void:
 	level8.player_unit_limit = 5
 	level8.player_area_start = 2
 	level8.enemy_area_end = 1
-	level8.gold_reward = 300
+	level8.gold_reward = 400  # 经济平衡: 300 -> 400
 	level8.required_level = "level_007"
 	level8.enemy_spawns = [
 		EnemySpawn.create("enemy_elite_warrior", Vector2i(0, 0), 1.0),  # 平衡调整: 1.1 -> 1.0
@@ -202,7 +202,7 @@ func _create_levels() -> void:
 	level9.player_unit_limit = 5
 	level9.player_area_start = 2
 	level9.enemy_area_end = 1
-	level9.gold_reward = 350
+	level9.gold_reward = 450  # 经济平衡: 350 -> 450
 	level9.required_level = "level_008"
 	level9.enemy_spawns = [
 		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 1.1),      # 平衡调整: 1.3 -> 1.1
@@ -222,7 +222,7 @@ func _create_levels() -> void:
 	level10.player_unit_limit = 5
 	level10.player_area_start = 2
 	level10.enemy_area_end = 1
-	level10.gold_reward = 300
+	level10.gold_reward = 500  # 经济平衡: 300 -> 500
 	level10.required_level = "level_009"
 	level10.enemy_spawns = [
 		EnemySpawn.create("enemy_frost_wolf", Vector2i(0, 0), 1.0),
@@ -239,7 +239,7 @@ func _create_levels() -> void:
 	level11.player_unit_limit = 5
 	level11.player_area_start = 2
 	level11.enemy_area_end = 1
-	level11.gold_reward = 350
+	level11.gold_reward = 550  # 经济平衡: 350 -> 550
 	level11.required_level = "level_010"
 	level11.enemy_spawns = [
 		EnemySpawn.create("enemy_ice_mage", Vector2i(0, 0), 1.0),
@@ -257,7 +257,7 @@ func _create_levels() -> void:
 	level12.player_unit_limit = 5
 	level12.player_area_start = 2
 	level12.enemy_area_end = 1
-	level12.gold_reward = 400
+	level12.gold_reward = 600  # 经济平衡: 400 -> 600
 	level12.required_level = "level_011"
 	level12.enemy_spawns = [
 		EnemySpawn.create("enemy_frost_wolf", Vector2i(0, 0), 1.2),
@@ -275,7 +275,7 @@ func _create_levels() -> void:
 	level13.player_unit_limit = 5
 	level13.player_area_start = 2
 	level13.enemy_area_end = 1
-	level13.gold_reward = 450
+	level13.gold_reward = 650  # 经济平衡: 450 -> 650
 	level13.required_level = "level_012"
 	level13.enemy_spawns = [
 		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 1.2),
@@ -295,7 +295,7 @@ func _create_levels() -> void:
 	level14.player_unit_limit = 5
 	level14.player_area_start = 2
 	level14.enemy_area_end = 1
-	level14.gold_reward = 400
+	level14.gold_reward = 700  # 经济平衡: 400 -> 700
 	level14.required_level = "level_013"
 	level14.enemy_spawns = [
 		EnemySpawn.create("enemy_fire_imp", Vector2i(0, 0), 1.0),
@@ -312,7 +312,7 @@ func _create_levels() -> void:
 	level15.player_unit_limit = 5
 	level15.player_area_start = 2
 	level15.enemy_area_end = 1
-	level15.gold_reward = 450
+	level15.gold_reward = 750  # 经济平衡: 450 -> 750
 	level15.required_level = "level_014"
 	level15.enemy_spawns = [
 		EnemySpawn.create("enemy_fire_imp", Vector2i(0, 0), 1.1),
@@ -330,7 +330,7 @@ func _create_levels() -> void:
 	level16.player_unit_limit = 5
 	level16.player_area_start = 2
 	level16.enemy_area_end = 1
-	level16.gold_reward = 500
+	level16.gold_reward = 800  # 经济平衡: 500 -> 800
 	level16.required_level = "level_015"
 	level16.enemy_spawns = [
 		EnemySpawn.create("enemy_elite_warrior", Vector2i(0, 0), 1.3),
@@ -348,7 +348,7 @@ func _create_levels() -> void:
 	level17.player_unit_limit = 5
 	level17.player_area_start = 2
 	level17.enemy_area_end = 1
-	level17.gold_reward = 600
+	level17.gold_reward = 900  # 经济平衡: 600 -> 900
 	level17.required_level = "level_016"
 	level17.enemy_spawns = [
 		EnemySpawn.create("enemy_fire_imp", Vector2i(0, 0), 1.5),
@@ -368,7 +368,7 @@ func _create_levels() -> void:
 	level18.player_unit_limit = 5
 	level18.player_area_start = 2
 	level18.enemy_area_end = 1
-	level18.gold_reward = 500
+	level18.gold_reward = 1000  # 经济平衡: 500 -> 1000
 	level18.required_level = "level_017"
 	level18.enemy_spawns = [
 		EnemySpawn.create("enemy_shadow_knight", Vector2i(0, 0), 1.0),
@@ -385,7 +385,7 @@ func _create_levels() -> void:
 	level19.player_unit_limit = 5
 	level19.player_area_start = 2
 	level19.enemy_area_end = 1
-	level19.gold_reward = 600
+	level19.gold_reward = 1200  # 经济平衡: 600 -> 1200
 	level19.required_level = "level_018"
 	level19.enemy_spawns = [
 		EnemySpawn.create("enemy_shadow_knight", Vector2i(0, 0), 1.1),
@@ -403,7 +403,7 @@ func _create_levels() -> void:
 	level20.player_unit_limit = 5
 	level20.player_area_start = 2
 	level20.enemy_area_end = 1
-	level20.gold_reward = 800
+	level20.gold_reward = 1500  # 经济平衡: 800 -> 1500
 	level20.required_level = "level_019"
 	level20.enemy_spawns = [
 		EnemySpawn.create("enemy_shadow_knight", Vector2i(0, 0), 1.3),
@@ -421,7 +421,7 @@ func _create_levels() -> void:
 	level21.player_unit_limit = 5
 	level21.player_area_start = 2
 	level21.enemy_area_end = 1
-	level21.gold_reward = 1000
+	level21.gold_reward = 2000  # 经济平衡: 1000 -> 2000 (最终关卡奖励)
 	level21.required_level = "level_020"
 	level21.enemy_spawns = [
 		EnemySpawn.create("enemy_shadow_knight", Vector2i(0, 0), 1.5),

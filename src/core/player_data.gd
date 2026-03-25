@@ -6,7 +6,7 @@ class_name PlayerData
 extends Resource
 
 ## 存档版本号（用于数据迁移）
-@export var save_version: int = 1
+@export var save_version: int = 2  # 版本 2: 添加成就和每日任务系统
 
 ## 存档创建时间（Unix timestamp）
 @export var created_at: int = 0
@@ -169,6 +169,9 @@ func update_play_time() -> void:
 func validate() -> Array:
 	var errors: Array[String] = []
 
+	# 执行版本迁移
+	_migrate_data()
+
 	# 检查金币
 	if gold < 0:
 		errors.append("金币不能为负数: %d" % gold)
@@ -199,9 +202,41 @@ func validate() -> Array:
 		return [false, "\n".join(errors)]
 
 
+## 数据版本迁移
+func _migrate_data() -> void:
+	# 版本 1 -> 2: 添加成就和每日任务系统字段
+	if save_version < 2:
+		print("[Save] Migrating save data from version %d to 2" % save_version)
+
+		# 确保新字段存在
+		if unlocked_achievements == null:
+			unlocked_achievements = []
+		if achievement_progress == null:
+			achievement_progress = {}
+		if achievement_unlock_times == null:
+			achievement_unlock_times = {}
+		if total_enemies_defeated == null:
+			total_enemies_defeated = 0
+		if total_synergies_triggered == null:
+			total_synergies_triggered = 0
+		if daily_mission_data == null:
+			daily_mission_data = {}
+
+		# 确保设置中有所有必需的键
+		if not settings.has("bgm_volume"):
+			settings["bgm_volume"] = 1.0
+		if not settings.has("sfx_volume"):
+			settings["sfx_volume"] = 0.7
+		if not settings.has("auto_battle_speed"):
+			settings["auto_battle_speed"] = 1.0
+
+		save_version = 2
+		print("[Save] Migration complete")
+
+
 ## 重置玩家数据（用于测试）
 func reset() -> void:
-	save_version = 1
+	save_version = 2
 	created_at = 0
 	last_played = 0
 	gold = 100
@@ -212,7 +247,7 @@ func reset() -> void:
 	current_level_id = ""
 	settings = {
 		"bgm_volume": 1.0,
-		"sfx_volume": 1.0,
+		"sfx_volume": 0.7,
 		"auto_battle_speed": 1.0
 	}
 	unlocked_achievements = []
