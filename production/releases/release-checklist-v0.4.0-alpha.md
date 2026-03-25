@@ -2,7 +2,7 @@
 
 **Generated:** 2026-03-25
 **Target Milestone:** Alpha
-**Current Sprint:** Sprint 11 (2026-04-17 to 2026-04-30)
+**Current Sprint:** Sprint 11 (2026-04-17 to 2026-04-30) — ✅ Complete
 **Milestone Status:** ✅ Complete
 
 ---
@@ -154,16 +154,16 @@
 ## Sprint 11 Remaining Tasks
 
 ### Must Have (Pending)
-- [ ] T3: 经济系统平衡 (economy-designer, 0.5 days)
-- [ ] T5: 存档兼容性测试 (qa-tester, 0.5 days)
+- [x] T3: 经济系统平衡 (economy-designer, 0.5 days)
+- [x] T5: 存档兼容性测试 (qa-tester, 0.5 days)
 
-### Should Have (Pending)
+### Should Have (Deferred to Beta)
 - [ ] T7: 战斗动画优化 (technical-artist, 0.5 days)
 - [ ] T8: 加载性能优化 (performance-analyst, 0.5 days)
 - [ ] T9: 错误处理增强 (gameplay-programmer, 0.5 days)
 - [ ] T10: 教程/引导设计 (game-designer, 1.0 days)
 
-### Nice to Have (Pending)
+### Nice to Have (Deferred to Beta)
 - [ ] T11: 粒子效果增强 (technical-artist, 0.5 days)
 - [ ] T12: 统计数据面板 (ui-programmer, 0.5 days)
 
@@ -226,4 +226,4 @@
 | Sprint 8 | 协同系统 + 世界地图 | ✅ Complete |
 | Sprint 9 | 内容扩展 (单位/关卡) | ✅ Complete |
 | Sprint 10 | 成就系统 + UI 完善 | ✅ Complete |
-| Sprint 11 | 平衡调整 + Bug 修复 | 🔄 In Progress |
+| Sprint 11 | 平衡调整 + Bug 修复 | ✅ Complete |

@@ -1,5 +1,7 @@
 # Sprint 11 — 2026-04-17 to 2026-04-30
 
+**Status**: ✅ Complete
+
 ## Sprint Goal
 
 平衡游戏数值，修复已知问题，优化用户体验，为 Alpha 发布做准备。
@@ -22,9 +24,9 @@
 |----|------|-------------|-----------|--------------|--------|
 | T1 | 单位平衡调整 | game-designer | 1.0 | — | ✅ Complete |
 | T2 | 关卡难度曲线调整 | game-designer | 1.0 | T1 | ✅ Complete |
-| T3 | 经济系统平衡 | economy-designer | 0.5 | T1 | 🔲 Pending |
+| T3 | 经济系统平衡 | economy-designer | 0.5 | T1 | ✅ Complete |
 | T4 | 音效系统完善 | sound-designer | 0.5 | — | ✅ Complete |
-| T5 | 存档兼容性测试 | qa-tester | 0.5 | — | 🔲 Pending |
+| T5 | 存档兼容性测试 | qa-tester | 0.5 | — | ✅ Complete |
 | T6 | UI/UX 打磨 | ux-designer | 1.0 | — | ✅ Complete |
 
 **Total Must Have: 4.5 days**
@@ -58,13 +60,13 @@
 
 ## Definition of Done
 
-- [ ] 所有单位属性符合设计规范
-- [ ] 关卡难度曲线平滑合理
-- [ ] 金币经济平衡（收入/支出比合理）
-- [ ] 无阻塞性 Bug
-- [ ] UI 响应流畅
-- [ ] 存档系统稳定可靠
-- [ ] 新手引导完整
+- [x] 所有单位属性符合设计规范
+- [x] 关卡难度曲线平滑合理
+- [x] 金币经济平衡（收入/支出比合理）
+- [x] 无阻塞性 Bug
+- [x] UI 响应流畅
+- [x] 存档系统稳定可靠
+- [ ] 新手引导完整 (推迟至 Beta)
 
 ---
 
