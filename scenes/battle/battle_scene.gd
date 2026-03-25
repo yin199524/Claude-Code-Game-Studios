@@ -99,6 +99,7 @@ func _setup_battle_manager() -> void:
 	battle_manager.unit_attacked.connect(_on_unit_attacked)
 	battle_manager.unit_died.connect(_on_unit_died)
 	battle_manager.battle_ended.connect(_on_battle_ended)
+	battle_manager.synergies_activated.connect(_on_synergies_activated)
 
 
 ## 连接 HUD 信号
@@ -270,6 +271,16 @@ func _on_unit_died(unit: UnitInstance) -> void:
 	# 播放死亡音效
 	SoundManager.play_sfx(SoundManager.SFX.UNIT_DEATH)
 
+	# 触发成就和任务事件：击败敌人
+	if not unit.is_player_unit:
+		# 更新累计击败敌人数
+		if SaveManager.player_data != null:
+			SaveManager.player_data.total_enemies_defeated += 1
+		# 触发成就事件
+		AchievementManager.trigger_event("enemy_defeated", {"count": 1})
+		# 触发每日任务事件
+		DailyMissionManager.trigger_event(Global.DailyMissionType.DEFEAT_ENEMIES, 1)
+
 	if unit_nodes.has(unit):
 		var node = unit_nodes[unit]
 		var tween = create_tween()
@@ -319,6 +330,10 @@ func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 
 		# 保存游戏
 		SaveManager.save_game()
+
+		# 触发成就和任务事件：通关关卡
+		AchievementManager.trigger_event("level_completed", {"level_id": current_level.id})
+		DailyMissionManager.trigger_event(Global.DailyMissionType.WIN_LEVELS, 1)
 
 	# 更新 UI
 	var hud = $HUD
@@ -594,3 +609,35 @@ func _on_continue_pressed() -> void:
 	else:
 		# 失败后回关卡选择
 		SceneTransition.change_scene("res://scenes/level/level_select.tscn")
+
+
+## 协同激活回调
+func _on_synergies_activated(synergy_names: Array[String]) -> void:
+	# 更新累计协同触发次数
+	if SaveManager.player_data != null:
+		SaveManager.player_data.total_synergies_triggered += synergy_names.size()
+
+	# 触发成就和任务事件
+	for synergy_name in synergy_names:
+		# 查找对应的协同ID
+		var synergy_id = _get_synergy_id_by_name(synergy_name)
+		AchievementManager.trigger_event("synergy_triggered", {"synergy_id": synergy_id})
+
+	DailyMissionManager.trigger_event(Global.DailyMissionType.TRIGGER_SYNERGY, synergy_names.size())
+
+
+## 根据名称获取协同ID
+func _get_synergy_id_by_name(name: String) -> String:
+	var name_to_id = {
+		"战士兄弟": "warrior_brothers",
+		"法术共鸣": "magic_resonance",
+		"骑士荣耀": "knight_honor",
+		"治愈之光": "healing_light",
+		"箭雨风暴": "arrow_storm",
+		"暗影突袭": "shadow_strike",
+		"前排护卫": "front_guard",
+		"后排输出": "back_fire",
+		"攻守平衡": "balance",
+		"魔武双修": "magic_martial"
+	}
+	return name_to_id.get(name, "")

@@ -477,6 +477,10 @@ func _on_buy_pressed(unit_id: String, price: int) -> void:
 	# 添加单位
 	SaveManager.add_unit(unit_id, 1)
 
+	# 触发成就和任务事件：收集单位
+	AchievementManager.trigger_event("unit_collected", {"count": 1})
+	DailyMissionManager.trigger_event(Global.DailyMissionType.BUY_UNITS, 1)
+
 	# 刷新显示
 	_update_gold_display()
 	_update_owned_count()
@@ -506,6 +510,15 @@ func _on_upgrade_pressed(unit_id: String, cost: int) -> void:
 
 	# 显示升级特效
 	_show_upgrade_effect(unit_id)
+
+	# 触发成就和任务事件：升级单位
+	AchievementManager.trigger_event("unit_upgraded", {})
+	DailyMissionManager.trigger_event(Global.DailyMissionType.UPGRADE_UNITS, 1)
+
+	# 检查是否达到满级
+	var new_level = SaveManager.get_unit_level(unit_id)
+	if new_level >= Global.MAX_UNIT_LEVEL:
+		AchievementManager.trigger_event("unit_max_level", {})
 
 	# 刷新显示
 	_update_gold_display()

@@ -38,7 +38,7 @@
 | T9 | 主菜单 UI 增强 | ui-programmer | 1.0 | — | ✅ Complete |
 | T10 | 商店 UI 增强 | ui-programmer | 0.75 | — | 🔲 Pending |
 | T11 | 成就通知弹窗 | ui-programmer | 0.5 | T4 | ✅ Complete |
-| T12 | 进度系统整合 | gameplay-programmer | 0.5 | T2, T6 | 🔲 Pending |
+| T12 | 进度系统整合 | gameplay-programmer | 0.5 | T2, T6 | ✅ Complete |
 
 **Total Should Have: 2.75 days**
 
@@ -59,13 +59,13 @@
 
 ## Definition of Done
 
-- [ ] 玩家可以查看所有成就及其进度
-- [ ] 成就解锁时有视觉和音效反馈
-- [ ] 每日任务每天自动刷新
-- [ ] 完成任务可领取奖励
-- [ ] 主菜单 UI 美观且功能完整
-- [ ] 商店 UI 展示单位详情和协同信息
-- [ ] 所有数据正确持久化
+- [x] 玩家可以查看所有成就及其进度
+- [x] 成就解锁时有视觉和音效反馈
+- [x] 每日任务每天自动刷新
+- [x] 完成任务可领取奖励
+- [x] 主菜单 UI 美观且功能完整
+- [x] 商店 UI 展示单位详情和协同信息
+- [x] 所有数据正确持久化
 
 ---
 
