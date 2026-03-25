@@ -134,6 +134,302 @@ func _create_levels() -> void:
 	]
 	_levels[level5.id] = level5
 
+	# === 沙漠世界关卡 (world_desert) ===
+
+	# 关卡 6：沙漠入口
+	var level6 = LevelDefinition.new()
+	level6.id = "level_006"
+	level6.display_name = "第六关：沙漠入口"
+	level6.description = "踏入灼热的沙漠，沙蝎潜伏在沙丘之下。"
+	level6.difficulty = 6
+	level6.grid_size = Vector2i(3, 3)
+	level6.player_unit_limit = 5
+	level6.player_area_start = 2
+	level6.enemy_area_end = 1
+	level6.gold_reward = 200
+	level6.required_level = "level_005"
+	level6.enemy_spawns = [
+		EnemySpawn.create("enemy_scorpion", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("enemy_scorpion", Vector2i(2, 0), 1.0)
+	]
+	_levels[level6.id] = level6
+
+	# 关卡 7：沙丘伏击
+	var level7 = LevelDefinition.new()
+	level7.id = "level_007"
+	level7.display_name = "第七关：沙丘伏击"
+	level7.description = "木乃伊从沙中苏醒，护甲坚硬如铁。"
+	level7.difficulty = 7
+	level7.grid_size = Vector2i(3, 3)
+	level7.player_unit_limit = 5
+	level7.player_area_start = 2
+	level7.enemy_area_end = 1
+	level7.gold_reward = 250
+	level7.required_level = "level_006"
+	level7.enemy_spawns = [
+		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("enemy_scorpion", Vector2i(1, 0), 1.1),
+		EnemySpawn.create("enemy_mummy", Vector2i(2, 0), 1.0)
+	]
+	_levels[level7.id] = level7
+
+	# 关卡 8：绿洲守卫
+	var level8 = LevelDefinition.new()
+	level8.id = "level_008"
+	level8.display_name = "第八关：绿洲守卫"
+	level8.description = "沙漠守卫者阻止你前进。"
+	level8.difficulty = 8
+	level8.grid_size = Vector2i(3, 3)
+	level8.player_unit_limit = 5
+	level8.player_area_start = 2
+	level8.enemy_area_end = 1
+	level8.gold_reward = 300
+	level8.required_level = "level_007"
+	level8.enemy_spawns = [
+		EnemySpawn.create("enemy_elite_warrior", Vector2i(0, 0), 1.1),
+		EnemySpawn.create("enemy_mummy", Vector2i(1, 0), 1.2),
+		EnemySpawn.create("enemy_scorpion", Vector2i(2, 0), 1.1)
+	]
+	_levels[level8.id] = level8
+
+	# 关卡 9：沙漠深处
+	var level9 = LevelDefinition.new()
+	level9.id = "level_009"
+	level9.display_name = "第九关：沙漠深处"
+	level9.description = "沙漠最强守卫集结。"
+	level9.difficulty = 9
+	level9.grid_size = Vector2i(3, 3)
+	level9.player_unit_limit = 5
+	level9.player_area_start = 2
+	level9.enemy_area_end = 1
+	level9.gold_reward = 350
+	level9.required_level = "level_008"
+	level9.enemy_spawns = [
+		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 1.3),
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(1, 0), 1.0),
+		EnemySpawn.create("enemy_mummy", Vector2i(2, 0), 1.3)
+	]
+	_levels[level9.id] = level9
+
+	# === 冰原世界关卡 (world_ice) ===
+
+	var level10 = LevelDefinition.new()
+	level10.id = "level_010"
+	level10.display_name = "第十关：冰原边界"
+	level10.description = "冰狼在雪地中潜伏。"
+	level10.difficulty = 10
+	level10.grid_size = Vector2i(3, 3)
+	level10.player_unit_limit = 5
+	level10.player_area_start = 2
+	level10.enemy_area_end = 1
+	level10.gold_reward = 300
+	level10.required_level = "level_009"
+	level10.enemy_spawns = [
+		EnemySpawn.create("enemy_frost_wolf", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("enemy_frost_wolf", Vector2i(2, 0), 1.0)
+	]
+	_levels[level10.id] = level10
+
+	var level11 = LevelDefinition.new()
+	level11.id = "level_011"
+	level11.display_name = "第十一关：冰霜要塞"
+	level11.description = "冰法师施放寒冰魔法。"
+	level11.difficulty = 11
+	level11.grid_size = Vector2i(3, 3)
+	level11.player_unit_limit = 5
+	level11.player_area_start = 2
+	level11.enemy_area_end = 1
+	level11.gold_reward = 350
+	level11.required_level = "level_010"
+	level11.enemy_spawns = [
+		EnemySpawn.create("enemy_ice_mage", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("enemy_frost_wolf", Vector2i(1, 0), 1.1),
+		EnemySpawn.create("enemy_ice_mage", Vector2i(2, 0), 1.0)
+	]
+	_levels[level11.id] = level11
+
+	var level12 = LevelDefinition.new()
+	level12.id = "level_012"
+	level12.display_name = "第十二关：暴风雪"
+	level12.description = "在暴风雪中战斗。"
+	level12.difficulty = 12
+	level12.grid_size = Vector2i(3, 3)
+	level12.player_unit_limit = 5
+	level12.player_area_start = 2
+	level12.enemy_area_end = 1
+	level12.gold_reward = 400
+	level12.required_level = "level_011"
+	level12.enemy_spawns = [
+		EnemySpawn.create("enemy_frost_wolf", Vector2i(0, 0), 1.2),
+		EnemySpawn.create("enemy_ice_mage", Vector2i(1, 0), 1.1),
+		EnemySpawn.create("enemy_frost_wolf", Vector2i(2, 0), 1.2)
+	]
+	_levels[level12.id] = level12
+
+	var level13 = LevelDefinition.new()
+	level13.id = "level_013"
+	level13.display_name = "第十三关：冰原深处"
+	level13.description = "冰原最危险的敌人。"
+	level13.difficulty = 13
+	level13.grid_size = Vector2i(3, 3)
+	level13.player_unit_limit = 5
+	level13.player_area_start = 2
+	level13.enemy_area_end = 1
+	level13.gold_reward = 450
+	level13.required_level = "level_012"
+	level13.enemy_spawns = [
+		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 1.2),
+		EnemySpawn.create("enemy_ice_mage", Vector2i(1, 0), 1.2),
+		EnemySpawn.create("enemy_mummy", Vector2i(2, 0), 1.2)
+	]
+	_levels[level13.id] = level13
+
+	# === 火山世界关卡 (world_volcano) ===
+
+	var level14 = LevelDefinition.new()
+	level14.id = "level_014"
+	level14.display_name = "第十四关：火山脚"
+	level14.description = "火魔在熔岩旁等待。"
+	level14.difficulty = 14
+	level14.grid_size = Vector2i(3, 3)
+	level14.player_unit_limit = 5
+	level14.player_area_start = 2
+	level14.enemy_area_end = 1
+	level14.gold_reward = 400
+	level14.required_level = "level_013"
+	level14.enemy_spawns = [
+		EnemySpawn.create("enemy_fire_imp", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("enemy_fire_imp", Vector2i(2, 0), 1.0)
+	]
+	_levels[level14.id] = level14
+
+	var level15 = LevelDefinition.new()
+	level15.id = "level_015"
+	level15.display_name = "第十五关：熔岩之路"
+	level15.description = "火焰与熔岩的双重威胁。"
+	level15.difficulty = 15
+	level15.grid_size = Vector2i(3, 3)
+	level15.player_unit_limit = 5
+	level15.player_area_start = 2
+	level15.enemy_area_end = 1
+	level15.gold_reward = 450
+	level15.required_level = "level_014"
+	level15.enemy_spawns = [
+		EnemySpawn.create("enemy_fire_imp", Vector2i(0, 0), 1.1),
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(1, 0), 1.2),
+		EnemySpawn.create("enemy_fire_imp", Vector2i(2, 0), 1.1)
+	]
+	_levels[level15.id] = level15
+
+	var level16 = LevelDefinition.new()
+	level16.id = "level_016"
+	level16.display_name = "第十六关：火山口"
+	level16.description = "火山的炽热中心。"
+	level16.difficulty = 16
+	level16.grid_size = Vector2i(3, 3)
+	level16.player_unit_limit = 5
+	level16.player_area_start = 2
+	level16.enemy_area_end = 1
+	level16.gold_reward = 500
+	level16.required_level = "level_015"
+	level16.enemy_spawns = [
+		EnemySpawn.create("enemy_elite_warrior", Vector2i(0, 0), 1.3),
+		EnemySpawn.create("enemy_fire_imp", Vector2i(1, 0), 1.3),
+		EnemySpawn.create("enemy_elite_warrior", Vector2i(2, 0), 1.3)
+	]
+	_levels[level16.id] = level16
+
+	var level17 = LevelDefinition.new()
+	level17.id = "level_017"
+	level17.display_name = "第十七关：火山巅峰"
+	level17.description = "火山世界的最终挑战。"
+	level17.difficulty = 17
+	level17.grid_size = Vector2i(3, 3)
+	level17.player_unit_limit = 5
+	level17.player_area_start = 2
+	level17.enemy_area_end = 1
+	level17.gold_reward = 600
+	level17.required_level = "level_016"
+	level17.enemy_spawns = [
+		EnemySpawn.create("enemy_fire_imp", Vector2i(0, 0), 1.5),
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(1, 0), 1.0),
+		EnemySpawn.create("enemy_fire_imp", Vector2i(2, 0), 1.5)
+	]
+	_levels[level17.id] = level17
+
+	# === 暗影世界关卡 (world_shadow) ===
+
+	var level18 = LevelDefinition.new()
+	level18.id = "level_018"
+	level18.display_name = "第十八关：暗影入口"
+	level18.description = "黑暗开始笼罩大地。"
+	level18.difficulty = 18
+	level18.grid_size = Vector2i(3, 3)
+	level18.player_unit_limit = 5
+	level18.player_area_start = 2
+	level18.enemy_area_end = 1
+	level18.gold_reward = 500
+	level18.required_level = "level_017"
+	level18.enemy_spawns = [
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(0, 0), 1.0),
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(2, 0), 1.0)
+	]
+	_levels[level18.id] = level18
+
+	var level19 = LevelDefinition.new()
+	level19.id = "level_019"
+	level19.display_name = "第十九关：黑暗走廊"
+	level19.description = "暗影中隐藏着强大的敌人。"
+	level19.difficulty = 19
+	level19.grid_size = Vector2i(3, 3)
+	level19.player_unit_limit = 5
+	level19.player_area_start = 2
+	level19.enemy_area_end = 1
+	level19.gold_reward = 600
+	level19.required_level = "level_018"
+	level19.enemy_spawns = [
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(0, 0), 1.1),
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(1, 0), 1.3),
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(2, 0), 1.1)
+	]
+	_levels[level19.id] = level19
+
+	var level20 = LevelDefinition.new()
+	level20.id = "level_020"
+	level20.display_name = "第二十关：暗影之心"
+	level20.description = "面对最终的暗影军团。"
+	level20.difficulty = 20
+	level20.grid_size = Vector2i(3, 3)
+	level20.player_unit_limit = 5
+	level20.player_area_start = 2
+	level20.enemy_area_end = 1
+	level20.gold_reward = 800
+	level20.required_level = "level_019"
+	level20.enemy_spawns = [
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(0, 0), 1.3),
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(1, 0), 1.3),
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(2, 0), 1.5)
+	]
+	_levels[level20.id] = level20
+
+	var level21 = LevelDefinition.new()
+	level21.id = "level_021"
+	level21.display_name = "最终决战：暗影之王"
+	level21.description = "最终 Boss 战！击败暗影之王！"
+	level21.difficulty = 21
+	level21.grid_size = Vector2i(3, 3)
+	level21.player_unit_limit = 5
+	level21.player_area_start = 2
+	level21.enemy_area_end = 1
+	level21.gold_reward = 1000
+	level21.required_level = "level_020"
+	level21.enemy_spawns = [
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(0, 0), 1.5),
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(1, 0), 1.8),
+		EnemySpawn.create("enemy_shadow_knight", Vector2i(2, 0), 1.5)
+	]
+	_levels[level21.id] = level21
+
 
 ## 通过 ID 获取关卡定义
 func get_level(level_id: String) -> LevelDefinition:

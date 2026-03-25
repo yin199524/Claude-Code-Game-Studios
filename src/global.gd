@@ -9,7 +9,8 @@ enum ClassType {
 	ARCHER,    ## 弓手 - 远程输出
 	MAGE,      ## 法师 - 法术输出
 	KNIGHT,    ## 骑士 - 近战输出
-	HEALER     ## 治疗 - 辅助
+	HEALER,    ## 治疗 - 辅助
+	ROGUE      ## 刺客 - 暴击输出
 }
 
 ## 稀有度枚举
@@ -65,7 +66,8 @@ const COUNTER_RELATIONS: Dictionary = {
 	ClassType.ARCHER: [ClassType.MAGE, ClassType.HEALER],  ## 弓手克制法师、治疗
 	ClassType.MAGE: [ClassType.KNIGHT],              ## 法师克制骑士
 	ClassType.KNIGHT: [ClassType.HEALER],            ## 骑士克制治疗
-	ClassType.HEALER: []                             ## 治疗不克制任何职业
+	ClassType.HEALER: [],                            ## 治疗不克制任何职业
+	ClassType.ROGUE: [ClassType.MAGE, ClassType.ARCHER],    ## 刺客克制法师、弓手
 }
 
 
@@ -96,6 +98,8 @@ static func get_class_name(class_type: ClassType) -> String:
 			return "骑士"
 		ClassType.HEALER:
 			return "治疗"
+		ClassType.ROGUE:
+			return "刺客"
 	return "未知"
 
 

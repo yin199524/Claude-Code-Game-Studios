@@ -96,6 +96,16 @@ func _init_synergies() -> void:
 		"condition": {"class_type": Global.ClassType.ARCHER, "count": 2}
 	}))
 
+	_synergies.append(SynergyEffect.new({
+		"id": "shadow_strike",
+		"display_name": "暗影突袭",
+		"description": "刺客潜行出击，致命一击",
+		"synergy_type": SynergyType.CLASS,
+		"bonus_type": "damage",
+		"bonus_value": 0.2,
+		"condition": {"class_type": Global.ClassType.ROGUE, "count": 2}
+	}))
+
 	# === 阵型协同 ===
 	_synergies.append(SynergyEffect.new({
 		"id": "front_guard",

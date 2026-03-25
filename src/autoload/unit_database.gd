@@ -108,7 +108,99 @@ func _create_mvp_units() -> void:
 	healer.base_price = 100
 	_units[healer.id] = healer
 
-	# === 敌人专用单位 (T11) ===
+	# === 新增玩家单位 (Sprint 9) ===
+
+	# 长枪兵 - 战士变种
+	var spearman = UnitDefinition.new()
+	spearman.id = "unit_spearman"
+	spearman.display_name = "长枪兵"
+	spearman.class_type = Global.ClassType.WARRIOR
+	spearman.rarity = Global.Rarity.COMMON
+	spearman.hp = 400
+	spearman.attack = 50
+	spearman.attack_speed = 0.9
+	spearman.attack_range = 2
+	spearman.armor = 25
+	spearman.move_speed = 1.2
+	spearman.base_price = 70
+	_units[spearman.id] = spearman
+
+	# 猎人 - 弓手变种
+	var hunter = UnitDefinition.new()
+	hunter.id = "unit_hunter"
+	hunter.display_name = "猎人"
+	hunter.class_type = Global.ClassType.ARCHER
+	hunter.rarity = Global.Rarity.COMMON
+	hunter.hp = 180
+	hunter.attack = 70
+	hunter.attack_speed = 1.1
+	hunter.attack_range = 4
+	hunter.armor = 3
+	hunter.move_speed = 1.8
+	hunter.base_price = 75
+	_units[hunter.id] = hunter
+
+	# 牧师 - 群体治疗
+	var priest = UnitDefinition.new()
+	priest.id = "unit_priest"
+	priest.display_name = "牧师"
+	priest.class_type = Global.ClassType.HEALER
+	priest.rarity = Global.Rarity.RARE
+	priest.hp = 200
+	priest.attack = 25
+	priest.attack_speed = 0.8
+	priest.attack_range = 3
+	priest.armor = 8
+	priest.move_speed = 1.0
+	priest.base_price = 150
+	_units[priest.id] = priest
+
+	# 火法师 - 高伤害法师
+	var pyromancer = UnitDefinition.new()
+	pyromancer.id = "unit_pyromancer"
+	pyromancer.display_name = "火法师"
+	pyromancer.class_type = Global.ClassType.MAGE
+	pyromancer.rarity = Global.Rarity.RARE
+	pyromancer.hp = 150
+	pyromancer.attack = 90
+	pyromancer.attack_speed = 0.7
+	pyromancer.attack_range = 3
+	pyromancer.armor = 0
+	pyromancer.move_speed = 1.0
+	pyromancer.base_price = 180
+	_units[pyromancer.id] = pyromancer
+
+	# 圣骑士 - 攻守兼备
+	var paladin = UnitDefinition.new()
+	paladin.id = "unit_paladin"
+	paladin.display_name = "圣骑士"
+	paladin.class_type = Global.ClassType.KNIGHT
+	paladin.rarity = Global.Rarity.EPIC
+	paladin.hp = 450
+	paladin.attack = 45
+	paladin.attack_speed = 0.85
+	paladin.attack_range = 1
+	paladin.armor = 35
+	paladin.move_speed = 1.5
+	paladin.base_price = 300
+	_units[paladin.id] = paladin
+
+	# 刺客 - 暴击输出 (ROGUE职业)
+	var assassin = UnitDefinition.new()
+	assassin.id = "unit_assassin"
+	assassin.display_name = "刺客"
+	assassin.class_type = Global.ClassType.ROGUE
+	assassin.rarity = Global.Rarity.EPIC
+	assassin.hp = 280
+	assassin.attack = 75
+	assassin.attack_speed = 1.3
+	assassin.attack_range = 1
+	assassin.armor = 10
+	assassin.move_speed = 2.5
+	assassin.base_price = 280
+	_units[assassin.id] = assassin
+
+	# === 敌人专用单位 ===
 
 	# 精英战士 - 强化版战士（敌人专用）
 	var elite_warrior = UnitDefinition.new()
@@ -139,6 +231,98 @@ func _create_mvp_units() -> void:
 	shadow_mage.move_speed = 0.8
 	shadow_mage.base_price = 0  # 敌人不可购买
 	_units[shadow_mage.id] = shadow_mage
+
+	# === 新增敌人单位 (Sprint 9) ===
+
+	# 沙蝎 - 沙漠敌人
+	var scorpion = UnitDefinition.new()
+	scorpion.id = "enemy_scorpion"
+	scorpion.display_name = "沙蝎"
+	scorpion.class_type = Global.ClassType.WARRIOR
+	scorpion.rarity = Global.Rarity.COMMON
+	scorpion.hp = 400
+	scorpion.attack = 45
+	scorpion.attack_speed = 1.0
+	scorpion.attack_range = 1
+	scorpion.armor = 35
+	scorpion.move_speed = 1.3
+	scorpion.base_price = 0
+	_units[scorpion.id] = scorpion
+
+	# 木乃伊 - 沙漠敌人（高护甲）
+	var mummy = UnitDefinition.new()
+	mummy.id = "enemy_mummy"
+	mummy.display_name = "木乃伊"
+	mummy.class_type = Global.ClassType.KNIGHT
+	mummy.rarity = Global.Rarity.RARE
+	mummy.hp = 550
+	mummy.attack = 40
+	mummy.attack_speed = 0.7
+	mummy.attack_range = 1
+	mummy.armor = 50
+	mummy.move_speed = 0.8
+	mummy.base_price = 0
+	_units[mummy.id] = mummy
+
+	# 冰狼 - 冰原敌人
+	var frost_wolf = UnitDefinition.new()
+	frost_wolf.id = "enemy_frost_wolf"
+	frost_wolf.display_name = "冰狼"
+	frost_wolf.class_type = Global.ClassType.WARRIOR
+	frost_wolf.rarity = Global.Rarity.COMMON
+	frost_wolf.hp = 350
+	frost_wolf.attack = 50
+	frost_wolf.attack_speed = 1.2
+	frost_wolf.attack_range = 1
+	frost_wolf.armor = 15
+	frost_wolf.move_speed = 2.0
+	frost_wolf.base_price = 0
+	_units[frost_wolf.id] = frost_wolf
+
+	# 冰法师 - 冰原敌人
+	var ice_mage = UnitDefinition.new()
+	ice_mage.id = "enemy_ice_mage"
+	ice_mage.display_name = "冰法师"
+	ice_mage.class_type = Global.ClassType.MAGE
+	ice_mage.rarity = Global.Rarity.RARE
+	ice_mage.hp = 200
+	ice_mage.attack = 85
+	ice_mage.attack_speed = 0.6
+	ice_mage.attack_range = 3
+	ice_mage.armor = 5
+	ice_mage.move_speed = 0.9
+	ice_mage.base_price = 0
+	_units[ice_mage.id] = ice_mage
+
+	# 火魔 - 火山敌人（高伤害）
+	var fire_imp = UnitDefinition.new()
+	fire_imp.id = "enemy_fire_imp"
+	fire_imp.display_name = "火魔"
+	fire_imp.class_type = Global.ClassType.MAGE
+	fire_imp.rarity = Global.Rarity.RARE
+	fire_imp.hp = 150
+	fire_imp.attack = 100
+	fire_imp.attack_speed = 0.8
+	fire_imp.attack_range = 3
+	fire_imp.armor = 0
+	fire_imp.move_speed = 1.5
+	fire_imp.base_price = 0
+	_units[fire_imp.id] = fire_imp
+
+	# 暗影骑士 - 暗影敌人
+	var shadow_knight = UnitDefinition.new()
+	shadow_knight.id = "enemy_shadow_knight"
+	shadow_knight.display_name = "暗影骑士"
+	shadow_knight.class_type = Global.ClassType.KNIGHT
+	shadow_knight.rarity = Global.Rarity.EPIC
+	shadow_knight.hp = 600
+	shadow_knight.attack = 60
+	shadow_knight.attack_speed = 0.9
+	shadow_knight.attack_range = 1
+	shadow_knight.armor = 45
+	shadow_knight.move_speed = 1.5
+	shadow_knight.base_price = 0
+	_units[shadow_knight.id] = shadow_knight
 
 
 ## 通过 ID 获取单位定义
