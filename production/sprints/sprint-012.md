@@ -27,7 +27,7 @@
 | T3 | 欢迎界面实现 | ui-programmer | 0.5 | T2 | ✅ Complete |
 | T4 | 战斗教程实现 | gameplay-programmer | 1.0 | T2 | ✅ Complete |
 | T5 | 克制关系提示 | ui-programmer | 0.5 | T4 | ✅ Complete |
-| T6 | 测试检查清单执行 | qa-tester | 1.5 | — | 🔲 Pending |
+| T6 | 测试检查清单执行 | qa-tester | 1.5 | — | ✅ Complete |
 
 **Total Must Have: 5.5 days**
 
