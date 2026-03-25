@@ -18,11 +18,13 @@
 
 | # | System | Category | Status | Dependencies |
 |---|--------|----------|--------|--------------|
-| 1 | 单位升级系统 | Core | Not Started | 玩家数据 ✅, 单位数据定义 ✅ |
-| 2 | 单位协同系统 | Core | Not Started | 单位数据定义 ✅ |
-| 3 | 进度系统 | Meta | Not Started | 玩家数据 ✅, 存档系统 ✅ |
-| 4 | 主菜单 UI 增强 | Presentation | Partial | 存档系统 ✅ |
-| 5 | 商店 UI 增强 | Presentation | Partial | 商店系统 ✅ |
+| 1 | 单位升级系统 | Core | ✅ Complete | 玩家数据 ✅, 单位数据定义 ✅ |
+| 2 | 单位协同系统 | Core | ✅ Complete | 单位数据定义 ✅ |
+| 3 | 进度系统 | Meta | ✅ Complete | 玩家数据 ✅, 存档系统 ✅ |
+| 4 | 主菜单 UI 增强 | Presentation | 🔄 In Progress | 存档系统 ✅ |
+| 5 | 商店 UI 增强 | Presentation | 🔄 In Progress | 商店系统 ✅ |
+| 6 | 成就系统 | Meta | 🔄 In Progress | 存档系统 ✅ |
+| 7 | 每日任务系统 | Meta | 🔲 Planned | 存档系统 ✅ |
 
 ### Content Expansion
 

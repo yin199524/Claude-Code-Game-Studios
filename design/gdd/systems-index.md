@@ -32,12 +32,17 @@
 | 13 | 敌人系统 | Content | MVP | Designed | design/gdd/enemy-system.md | 单位数据定义 |
 | 14 | 关卡系统 | Content | MVP | Designed | design/gdd/level-system.md | 自动战斗系统, 敌人系统 |
 | 15 | 关卡解锁系统 | Meta | VS | Not Started | — | 关卡系统, 玩家数据 |
-| 16 | 进度系统 | Meta | Alpha | Not Started | — | 玩家数据, 存档系统, 关卡解锁系统 |
-| 17 | 主菜单 UI | Presentation | Alpha | Not Started | — | 存档系统, 进度系统 |
-| 18 | 关卡选择 UI | Presentation | Alpha | Not Started | — | 关卡系统, 关卡解锁系统 |
-| 19 | 布局编辑 UI | Presentation | VS | Not Started | — | 网格布局系统, 单位数据定义, 玩家数据 |
-| 20 | 战斗 UI | Presentation | VS | Not Started | — | 自动战斗系统, 战斗状态机, 伤害计算系统 |
-| 21 | 商店 UI | Presentation | Alpha | Not Started | — | 商店系统, 资源系统, 单位数据定义 |
+| 16 | 进度系统 | Meta | Alpha | ✅ Complete | — | 玩家数据, 存档系统, 关卡解锁系统 |
+| 17 | 主菜单 UI | Presentation | Alpha | 🔄 In Progress | — | 存档系统, 进度系统 |
+| 18 | 关卡选择 UI | Presentation | Alpha | ✅ Complete | — | 关卡系统, 关卡解锁系统, 世界地图系统 |
+| 19 | 布局编辑 UI | Presentation | VS | ✅ Complete | — | 网格布局系统, 单位数据定义, 玩家数据 |
+| 20 | 战斗 UI | Presentation | VS | ✅ Complete | — | 自动战斗系统, 战斗状态机, 伤害计算系统 |
+| 21 | 商店 UI | Presentation | Alpha | 🔄 In Progress | — | 商店系统, 资源系统, 单位数据定义 |
+| 22 | 世界地图系统 | Meta | Alpha | ✅ Complete | design/gdd/world-map-system.md | 关卡系统, 关卡解锁系统 |
+| 23 | 单位升级系统 | Core | Alpha | ✅ Complete | design/gdd/unit-upgrade-system.md | 玩家数据, 单位数据定义 |
+| 24 | 单位协同系统 | Core | Alpha | ✅ Complete | design/gdd/synergy-system.md | 单位数据定义 |
+| 25 | 成就系统 | Meta | Alpha | 🔄 In Progress | design/gdd/achievement-system.md | 存档系统, 各游戏系统 |
+| 26 | 每日任务系统 | Meta | Alpha | 🔲 Planned | design/gdd/daily-mission-system.md | 存档系统, 各游戏系统 |
 
 ---
 
@@ -50,7 +55,7 @@
 | **Core** | 核心玩法系统 | 伤害计算系统, 目标选择 AI, 网格布局系统, 战斗状态机, 自动战斗系统, 资源系统, 克制系统, 单位协同系统 |
 | **Feature** | 功能扩展系统 | 商店系统 |
 | **Content** | 游戏内容系统 | 敌人系统, 关卡系统 |
-| **Meta** | 进度和元游戏系统 | 关卡解锁系统, 进度系统 |
+| **Meta** | 进度和元游戏系统 | 关卡解锁系统, 进度系统, 世界地图系统, 成就系统, 每日任务系统 |
 | **Presentation** | UI 和表现系统 | 主菜单 UI, 关卡选择 UI, 布局编辑 UI, 战斗 UI, 商店 UI |
 
 ---
@@ -61,7 +66,7 @@
 |------|------------|------------------|---------------|
 | **MVP** | 验证核心循环「布局 → 战斗 → 奖励 → 购买」 | 第一可玩原型 | 11 |
 | **Vertical Slice** | 一个完整区域的完整体验 | 垂直切片 / Demo | 5 |
-| **Alpha** | 所有功能粗略实现 | Alpha 里程碑 | 5 |
+| **Alpha** | 所有功能粗略实现 | Alpha 里程碑 | 9 |
 
 ---
 
@@ -167,8 +172,8 @@
 | Design docs reviewed | 0 |
 | Design docs approved | 0 |
 | MVP systems designed | 11 / 11 ✅ |
-| Vertical Slice systems designed | 0 / 5 |
-| Alpha systems designed | 0 / 5 |
+| Vertical Slice systems designed | 5 / 5 ✅ |
+| Alpha systems designed | 7 / 9 🔄 |
 
 ---
 
