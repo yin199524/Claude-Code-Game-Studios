@@ -261,8 +261,14 @@ func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int
 	# 攻击音效
 	SoundManager.play_sfx(SoundManager.SFX.UNIT_ATTACK)
 
-	# 攻击动画
-	_play_attack_animation(attacker, target)
+	# === 战斗动画增强 ===
+	var is_heal = attacker.get_class_type() == Global.ClassType.HEALER
+	var is_counter = counter_status == 1
+
+	if is_heal:
+		_play_heal_animation(attacker, target)
+	else:
+		_play_attack_animation_enhanced(attacker, target, is_counter)
 
 	# 显示克制提示（仅玩家单位触发时）
 	if counter_status == 1 and attacker.is_player_unit:
@@ -274,8 +280,8 @@ func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int
 			TutorialManager.show_counter_hint()
 
 
-## 播放攻击动画
-func _play_attack_animation(attacker: UnitInstance, target: UnitInstance) -> void:
+## === 战斗动画增强: 攻击动画 ===
+func _play_attack_animation_enhanced(attacker: UnitInstance, target: UnitInstance, is_counter: bool) -> void:
 	if not unit_nodes.has(attacker):
 		return
 
@@ -286,21 +292,121 @@ func _play_attack_animation(attacker: UnitInstance, target: UnitInstance) -> voi
 	var target_screen_pos = grid_layout.grid_to_screen(target.grid_position, grid_origin)
 	var direction = (target_screen_pos - original_pos).normalized()
 
-	# 冲向目标
+	# 增强的冲刺攻击：更远的距离，更快的速度
+	var attack_offset = direction * 35  # 增加冲刺距离
+
 	var tween = create_tween()
-	var attack_offset = direction * 20
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_QUAD)
 
-	tween.tween_property(attacker_node, "position", original_pos + attack_offset, 0.1)
-	tween.tween_property(attacker_node, "position", original_pos, 0.15)
+	# 冲刺
+	tween.tween_property(attacker_node, "position", original_pos + attack_offset, 0.08)
+	# 回弹
+	tween.tween_property(attacker_node, "position", original_pos, 0.12)
 
-	# 目标抖动
+	# 目标受击效果
 	if unit_nodes.has(target):
 		var target_node = unit_nodes[target]
 		var target_original_pos = target_node.position
+
+		# 克制攻击：金色闪光 + 更强抖动
+		if is_counter:
+			_play_counter_flash(target_node)
+
+		# 命中特效
+		_play_hit_effect(target, target_screen_pos)
+
+		# 抖动动画
 		var shake_tween = create_tween()
-		shake_tween.tween_property(target_node, "position", target_original_pos + Vector2(5, 0), 0.05)
-		shake_tween.tween_property(target_node, "position", target_original_pos - Vector2(5, 0), 0.05)
-		shake_tween.tween_property(target_node, "position", target_original_pos, 0.05)
+		var shake_amount = 8 if is_counter else 5
+		shake_tween.tween_property(target_node, "position", target_original_pos + Vector2(shake_amount, 0), 0.04)
+		shake_tween.tween_property(target_node, "position", target_original_pos - Vector2(shake_amount, 0), 0.04)
+		shake_tween.tween_property(target_node, "position", target_original_pos + Vector2(shake_amount * 0.5, -shake_amount * 0.5), 0.03)
+		shake_tween.tween_property(target_node, "position", target_original_pos, 0.03)
+
+
+## === 战斗动画增强: 克制闪光 ===
+func _play_counter_flash(node: Node2D) -> void:
+	# 创建金色闪光层
+	var flash = ColorRect.new()
+	flash.color = Color(1.0, 0.9, 0.3, 0.6)
+	flash.size = Vector2(90, 90)
+	flash.position = Vector2(-45, -45)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash.z_index = 10
+	node.add_child(flash)
+
+	# 闪光动画
+	var flash_tween = create_tween()
+	flash_tween.tween_property(flash, "modulate:a", 0.0, 0.25)
+	flash_tween.tween_callback(flash.queue_free)
+
+
+## === 战斗动画增强: 命中特效 ===
+func _play_hit_effect(target: UnitInstance, position: Vector2) -> void:
+	# 创建命中粒子
+	for i in range(5):
+		var particle = ColorRect.new()
+		particle.color = Color(1.0, 0.8, 0.3, 1.0)  # 金黄色
+		particle.size = Vector2(randf_range(3, 6), randf_range(3, 6))
+		particle.position = position + Vector2(randf_range(-15, 15), randf_range(-15, 15))
+		particle.z_index = 50
+		$UnitsContainer.add_child(particle)
+
+		# 向外扩散动画
+		var angle = randf() * PI * 2
+		var distance = randf_range(20, 40)
+		var tween = create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(particle, "position", position + Vector2(cos(angle) * distance, sin(angle) * distance), 0.3)
+		tween.tween_property(particle, "modulate:a", 0.0, 0.3)
+		tween.chain().tween_callback(particle.queue_free)
+
+
+## === 战斗动画增强: 治疗动画 ===
+func _play_heal_animation(healer: UnitInstance, target: UnitInstance) -> void:
+	if not unit_nodes.has(target):
+		return
+
+	var target_node = unit_nodes[target]
+	var target_screen_pos = grid_layout.grid_to_screen(target.grid_position, grid_origin)
+
+	# 创建绿色光环效果
+	var aura = ColorRect.new()
+	aura.color = Color(0.2, 1.0, 0.4, 0.4)  # 绿色半透明
+	aura.size = Vector2(100, 100)
+	aura.position = target_screen_pos - Vector2(50, 50)
+	aura.z_index = 5
+	aura.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$UnitsContainer.add_child(aura)
+
+	# 光环扩散动画
+	var aura_tween = create_tween()
+	aura_tween.set_parallel(true)
+	aura_tween.tween_property(aura, "size", Vector2(120, 120), 0.3)
+	aura_tween.tween_property(aura, "position", target_screen_pos - Vector2(60, 60), 0.3)
+	aura_tween.tween_property(aura, "modulate:a", 0.0, 0.3)
+	aura_tween.chain().tween_callback(aura.queue_free)
+
+	# 治疗粒子上升
+	for i in range(4):
+		var particle = Label.new()
+		particle.text = "✚"
+		particle.add_theme_font_size_override("font_size", 16)
+		particle.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4, 1.0))
+		particle.position = target_screen_pos + Vector2(randf_range(-20, 20), randf_range(-10, 10))
+		particle.z_index = 50
+		$UnitsContainer.add_child(particle)
+
+		var tween = create_tween()
+		tween.tween_property(particle, "position:y", particle.position.y - 40, 0.5)
+		tween.parallel().tween_property(particle, "modulate:a", 0.0, 0.5)
+		tween.tween_callback(particle.queue_free)
+
+
+## === 战斗动画增强: 原有攻击动画保留兼容 ===
+func _play_attack_animation(attacker: UnitInstance, target: UnitInstance) -> void:
+	_play_attack_animation_enhanced(attacker, target, false)
 
 
 ## 单位死亡回调
@@ -320,9 +426,62 @@ func _on_unit_died(unit: UnitInstance) -> void:
 
 	if unit_nodes.has(unit):
 		var node = unit_nodes[unit]
+		var unit_screen_pos = grid_layout.grid_to_screen(unit.grid_position, grid_origin)
+
+		# === 战斗动画增强: 死亡动画 ===
+		_play_death_animation(node, unit_screen_pos, unit.is_player_unit)
+
+
+## === 战斗动画增强: 死亡动画 ===
+func _play_death_animation(node: Node2D, position: Vector2, is_player: bool) -> void:
+	# 击飞效果
+	var knockback_dir = Vector2(randf_range(-1, 1), -1).normalized()  # 向上击飞
+	var knockback_dist = 30.0
+
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(node, "position", position + knockback_dir * knockback_dist, 0.2)
+	tween.tween_property(node, "rotation", randf_range(-0.5, 0.5), 0.2)
+
+	# 消散粒子
+	_spawn_death_particles(position, is_player)
+
+	# 淡出
+	tween.chain().tween_property(node, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(func(): _remove_unit_node_by_node(node))
+
+
+## === 战斗动画增强: 死亡粒子 ===
+func _spawn_death_particles(position: Vector2, is_player: bool) -> void:
+	var particle_color = Color(0.8, 0.2, 0.2, 1.0) if not is_player else Color(0.3, 0.6, 0.8, 1.0)
+
+	for i in range(8):
+		var particle = ColorRect.new()
+		particle.color = particle_color
+		particle.size = Vector2(randf_range(4, 8), randf_range(4, 8))
+		particle.position = position + Vector2(randf_range(-20, 20), randf_range(-20, 20))
+		particle.z_index = 100
+		$UnitsContainer.add_child(particle)
+
+		# 向外消散
+		var angle = randf() * PI * 2
+		var distance = randf_range(30, 60)
 		var tween = create_tween()
-		tween.tween_property(node, "modulate:a", 0.0, 0.5)
-		tween.tween_callback(func(): _remove_unit_node(unit))
+		tween.set_parallel(true)
+		tween.tween_property(particle, "position", position + Vector2(cos(angle) * distance, sin(angle) * distance - 20), 0.5)
+		tween.tween_property(particle, "modulate:a", 0.0, 0.5)
+		tween.tween_property(particle, "size", Vector2(2, 2), 0.4)
+		tween.chain().tween_callback(particle.queue_free)
+
+
+## 通过节点移除单位（用于死亡动画回调）
+func _remove_unit_node_by_node(node: Node2D) -> void:
+	# 查找对应的单位
+	for unit in unit_nodes.keys():
+		if unit_nodes[unit] == node:
+			_remove_unit_node(unit)
+			return
+	node.queue_free()
 
 
 ## 战斗结束回调
@@ -658,6 +817,9 @@ func _on_synergies_activated(synergy_names: Array[String]) -> void:
 	if SaveManager.player_data != null:
 		SaveManager.player_data.total_synergies_triggered += synergy_names.size()
 
+	# === 战斗动画增强: 协同连线特效 ===
+	_play_synergy_connection_effect()
+
 	# 触发成就和任务事件
 	for synergy_name in synergy_names:
 		# 查找对应的协同ID
@@ -672,6 +834,65 @@ func _on_synergies_activated(synergy_names: Array[String]) -> void:
 			TutorialManager.show_synergy_hint(synergy_name)
 
 	DailyMissionManager.trigger_event(Global.DailyMissionType.TRIGGER_SYNERGY, synergy_names.size())
+
+
+## === 战斗动画增强: 协同连线特效 ===
+func _play_synergy_connection_effect() -> void:
+	# 获取所有存活的玩家单位
+	var player_units = grid_layout.get_player_units()
+	var alive_units: Array[UnitInstance] = []
+	for unit in player_units:
+		if unit.is_alive:
+			alive_units.append(unit)
+
+	if alive_units.size() < 2:
+		return
+
+	# 在每对相邻单位之间创建连线
+	for i in range(alive_units.size() - 1):
+		var unit1 = alive_units[i]
+		var unit2 = alive_units[i + 1]
+
+		if not unit_nodes.has(unit1) or not unit_nodes.has(unit2):
+			continue
+
+		var pos1 = grid_layout.grid_to_screen(unit1.grid_position, grid_origin)
+		var pos2 = grid_layout.grid_to_screen(unit2.grid_position, grid_origin)
+
+		# 创建连线
+		_create_synergy_line(pos1, pos2)
+
+
+## 创建协同连线
+func _create_synergy_line(from: Vector2, to: Vector2) -> void:
+	var line = Line2D.new()
+	line.add_point(from)
+	line.add_point(to)
+	line.width = 3.0
+	line.default_color = Color(0.4, 0.8, 1.0, 0.8)  # 青蓝色
+	line.z_index = 30
+	$UnitsContainer.add_child(line)
+
+	# 连线渐隐动画
+	var tween = create_tween()
+	tween.tween_property(line, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(line.queue_free)
+
+	# 在连线中点创建闪光
+	var mid_point = (from + to) / 2.0
+	var flash = ColorRect.new()
+	flash.color = Color(0.6, 1.0, 1.0, 0.8)
+	flash.size = Vector2(12, 12)
+	flash.position = mid_point - Vector2(6, 6)
+	flash.z_index = 35
+	$UnitsContainer.add_child(flash)
+
+	var flash_tween = create_tween()
+	flash_tween.set_parallel(true)
+	flash_tween.tween_property(flash, "size", Vector2(24, 24), 0.3)
+	flash_tween.tween_property(flash, "position", mid_point - Vector2(12, 12), 0.3)
+	flash_tween.tween_property(flash, "modulate:a", 0.0, 0.3)
+	flash_tween.chain().tween_callback(flash.queue_free)
 
 
 ## 根据名称获取协同ID
