@@ -1,6 +1,6 @@
 # Milestone: Beta
 
-**Status**: 🔲 Planned
+**Status**: 🔄 In Progress
 **Start Date**: 2026-05-01
 **Target End Date**: 2026-06-15
 
