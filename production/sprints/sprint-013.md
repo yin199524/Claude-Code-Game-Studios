@@ -1,6 +1,6 @@
 # Sprint 13 — 2026-05-15 to 2026-05-28
 
-**Status**: 🔲 Planned
+**Status**: 🔄 In Progress
 
 ## Sprint Goal
 
