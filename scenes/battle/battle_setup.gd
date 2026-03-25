@@ -24,6 +24,9 @@ var unit_nodes: Dictionary = {}
 ## 已放置单位数量
 var placed_count: int = 0
 
+## 战斗教程组件
+var battle_tutorial: Control = null
+
 
 func _ready() -> void:
 	_load_level_data()
@@ -31,6 +34,7 @@ func _ready() -> void:
 	_create_unit_buttons()
 	_connect_signals()
 	_place_enemies()
+	_setup_tutorial()
 
 
 ## 加载关卡数据
@@ -120,6 +124,20 @@ func _connect_signals() -> void:
 	$Header/HBoxContainer/BackButton.pressed.connect(_on_back_pressed)
 
 
+## 设置战斗教程
+func _setup_tutorial() -> void:
+	# 创建教程组件
+	battle_tutorial = preload("res://scenes/tutorial/battle_tutorial.gd").new()
+	battle_tutorial.name = "BattleTutorial"
+	battle_tutorial.anchors_preset = Control.PRESET_FULL_RECT
+	add_child(battle_tutorial)
+
+	# 检查是否需要显示教程
+	if TutorialManager.should_show_tutorial(TutorialManager.TutorialID.BATTLE):
+		await get_tree().create_timer(0.5).timeout
+		battle_tutorial.start_battle_tutorial()
+
+
 ## 绘制网格线
 func _draw_grid() -> void:
 	pass
@@ -155,6 +173,10 @@ func _on_unit_button_pressed(unit_id: String) -> void:
 
 	selected_unit_id = unit_id
 	print("选中单位: %s" % unit_id)
+
+	# 通知教程：单位已选择
+	if battle_tutorial and battle_tutorial.has_method("on_unit_selected"):
+		battle_tutorial.on_unit_selected()
 
 
 ## 网格点击
@@ -204,6 +226,14 @@ func _place_selected_unit(grid_pos: Vector2i) -> void:
 		var instance = UnitInstance.create(def, grid_pos, true, unit_level)
 		grid_layout.place_unit(instance, grid_pos)
 		placed_count += 1
+
+		# 通知教程：单位已放置
+		if battle_tutorial and battle_tutorial.has_method("on_unit_placed"):
+			battle_tutorial.on_unit_placed()
+
+		# 通知教程：可以开始战斗
+		if placed_count >= 1 and battle_tutorial and battle_tutorial.has_method("on_can_start_battle"):
+			battle_tutorial.on_can_start_battle()
 
 
 ## 单位放置回调

@@ -31,6 +31,9 @@ var is_initialized: bool = false
 var battle_victory: bool = false
 var battle_rewards: Dictionary = {}
 
+## 战斗教程组件
+var battle_tutorial: Control = null
+
 
 func _ready() -> void:
 	# 加载关卡数据
@@ -44,6 +47,9 @@ func _ready() -> void:
 
 	# 连接 HUD 信号
 	_connect_hud_signals()
+
+	# 设置战斗教程
+	_setup_tutorial()
 
 	is_initialized = true
 
@@ -136,6 +142,19 @@ func start_battle() -> void:
 
 	# 开始战斗
 	battle_manager.start_battle()
+
+	# 通知教程：战斗已开始
+	if battle_tutorial and battle_tutorial.has_method("on_battle_started"):
+		battle_tutorial.on_battle_started()
+
+
+## 设置战斗教程
+func _setup_tutorial() -> void:
+	# 创建教程组件
+	battle_tutorial = preload("res://scenes/tutorial/battle_tutorial.gd").new()
+	battle_tutorial.name = "BattleTutorial"
+	battle_tutorial.anchors_preset = Control.PRESET_FULL_RECT
+	add_child(battle_tutorial)
 
 
 ## 加载玩家布局
@@ -292,6 +311,10 @@ func _on_unit_died(unit: UnitInstance) -> void:
 func _on_battle_ended(victory: bool, rewards: Dictionary) -> void:
 	battle_victory = victory
 	battle_rewards = rewards
+
+	# 通知教程：战斗已结束
+	if battle_tutorial and battle_tutorial.has_method("on_battle_ended"):
+		battle_tutorial.on_battle_ended(victory)
 
 	# 播放胜利/失败音效
 	if victory:
