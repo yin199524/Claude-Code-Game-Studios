@@ -192,3 +192,159 @@ static func show_level_unlock_animation(parent: Node, level_name: String, positi
 	fade_tween.tween_property(container, "scale", Vector2(1.2, 1.2), 0.3)
 	fade_tween.tween_property(container, "modulate:a", 0.0, 0.3)
 	fade_tween.chain().tween_callback(container.queue_free)
+
+
+## 显示加载指示器
+static var loading_indicator: Control = null
+
+static func show_loading(parent: Node, message: String = "加载中...") -> void:
+	if loading_indicator != null:
+		return
+
+	loading_indicator = Control.new()
+	loading_indicator.set_anchors_preset(Control.PRESET_FULL_RECT)
+	loading_indicator.z_index = 500
+	parent.add_child(loading_indicator)
+
+	# 半透明背景
+	var bg = ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.5)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	loading_indicator.add_child(bg)
+
+	# 加载容器
+	var container = PanelContainer.new()
+	container.set_anchors_preset(Control.PRESET_CENTER)
+	container.position = Vector2(-100, -40)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.18, 0.25, 0.95)
+	style.border_color = Color(0.4, 0.5, 0.7, 1)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(10)
+	container.add_theme_stylebox_override("panel", style)
+	loading_indicator.add_child(container)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	container.add_child(vbox)
+
+	# 加载图标（旋转动画）
+	var spinner = Label.new()
+	spinner.text = "⏳"
+	spinner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	spinner.add_theme_font_size_override("font_size", 32)
+	vbox.add_child(spinner)
+
+	# 加载文本
+	var label = Label.new()
+	label.text = message
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
+	vbox.add_child(label)
+
+	# 旋转动画
+	var tween = parent.create_tween()
+	tween.set_loops()
+	tween.tween_property(spinner, "rotation", PI * 2, 1.0)
+
+
+## 隐藏加载指示器
+static func hide_loading() -> void:
+	if loading_indicator == null:
+		return
+
+	loading_indicator.queue_free()
+	loading_indicator = null
+
+
+## 显示确认对话框
+## callback: 用户点击确认后调用的函数
+static func show_confirm_dialog(parent: Node, title: String, message: String, callback: Callable) -> Control:
+	var dialog = Control.new()
+	dialog.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dialog.z_index = 400
+	parent.add_child(dialog)
+
+	# 半透明背景
+	var bg = ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.6)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	dialog.add_child(bg)
+
+	# 对话框容器
+	var container = PanelContainer.new()
+	container.set_anchors_preset(Control.PRESET_CENTER)
+	container.custom_minimum_size = Vector2(300, 150)
+	container.position = Vector2(-150, -100)
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.15, 0.2, 0.98)
+	style.border_color = Color(0.4, 0.5, 0.7, 1)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(0, 0, 0, 0.6)
+	style.shadow_size = 12
+	container.add_theme_stylebox_override("panel", style)
+	dialog.add_child(container)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	container.add_child(vbox)
+
+	# 标题
+	var title_label = Label.new()
+	title_label.text = title
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 20)
+	title_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 1))
+	vbox.add_child(title_label)
+
+	# 消息
+	var msg_label = Label.new()
+	msg_label.text = message
+	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg_label.add_theme_font_size_override("font_size", 14)
+	msg_label.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8, 1))
+	msg_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	vbox.add_child(msg_label)
+
+	# 按钮行
+	var btn_row = HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 20)
+	vbox.add_child(btn_row)
+
+	# 取消按钮
+	var cancel_btn = Button.new()
+	cancel_btn.text = "取消"
+	cancel_btn.custom_minimum_size = Vector2(80, 35)
+	cancel_btn.pressed.connect(func():
+		SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
+		dialog.queue_free()
+	)
+	btn_row.add_child(cancel_btn)
+
+	# 确认按钮
+	var confirm_btn = Button.new()
+	confirm_btn.text = "确认"
+	confirm_btn.custom_minimum_size = Vector2(80, 35)
+	confirm_btn.pressed.connect(func():
+		SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
+		dialog.queue_free()
+		if callback.is_valid():
+			callback.call()
+	)
+	btn_row.add_child(confirm_btn)
+
+	# 入场动画
+	container.scale = Vector2(0.8, 0.8)
+	container.modulate.a = 0.0
+
+	var tween = parent.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(container, "scale", Vector2(1.0, 1.0), 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(container, "modulate:a", 1.0, 0.15)
+
+	return dialog

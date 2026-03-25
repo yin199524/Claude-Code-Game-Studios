@@ -25,7 +25,7 @@
 | T3 | 经济系统平衡 | economy-designer | 0.5 | T1 | 🔲 Pending |
 | T4 | 音效系统完善 | sound-designer | 0.5 | — | ✅ Complete |
 | T5 | 存档兼容性测试 | qa-tester | 0.5 | — | 🔲 Pending |
-| T6 | UI/UX 打磨 | ux-designer | 1.0 | — | 🔲 Pending |
+| T6 | UI/UX 打磨 | ux-designer | 1.0 | — | ✅ Complete |
 
 **Total Must Have: 4.5 days**
 
