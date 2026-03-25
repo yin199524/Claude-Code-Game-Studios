@@ -54,11 +54,11 @@ func _create_mvp_units() -> void:
 	archer.display_name = "弓手"
 	archer.class_type = Global.ClassType.ARCHER
 	archer.rarity = Global.Rarity.COMMON
-	archer.hp = 200
+	archer.hp = 220  # 平衡调整: 200 -> 220
 	archer.attack = 60
 	archer.attack_speed = 1.2
 	archer.attack_range = 3
-	archer.armor = 5
+	archer.armor = 8   # 平衡调整: 5 -> 8
 	archer.move_speed = 1.5
 	archer.base_price = 60
 	_units[archer.id] = archer
@@ -71,7 +71,7 @@ func _create_mvp_units() -> void:
 	mage.rarity = Global.Rarity.COMMON
 	mage.hp = 180
 	mage.attack = 80
-	mage.attack_speed = 0.6
+	mage.attack_speed = 0.7  # 平衡调整: 0.6 -> 0.7
 	mage.attack_range = 2
 	mage.armor = 0
 	mage.move_speed = 1.0
@@ -100,7 +100,7 @@ func _create_mvp_units() -> void:
 	healer.class_type = Global.ClassType.HEALER
 	healer.rarity = Global.Rarity.COMMON
 	healer.hp = 250
-	healer.attack = 20
+	healer.attack = 30  # 平衡调整: 20 -> 30 (影响治疗量)
 	healer.attack_speed = 1.0
 	healer.attack_range = 2
 	healer.armor = 5

@@ -34,6 +34,17 @@ enum SFX {
 func _ready() -> void:
 	# 初始化音频总线
 	_ensure_audio_buses()
+	# 加载保存的音量设置
+	_load_volume_settings()
+
+
+## 加载保存的音量设置
+func _load_volume_settings() -> void:
+	if SaveManager.player_data != null:
+		var saved_bgm = SaveManager.get_setting("bgm_volume", 1.0)
+		var saved_sfx = SaveManager.get_setting("sfx_volume", 0.7)
+		sound_volume = saved_sfx
+		set_volume(sound_volume)
 
 
 ## 确保音频总线存在
@@ -49,19 +60,23 @@ func play_sfx(sfx_type: SFX) -> void:
 	if not sound_enabled:
 		return
 
-	# 占位实现：打印日志
-	# 实际实现：加载并播放对应的音频文件
 	var sfx_name = _get_sfx_name(sfx_type)
-	print("[SFX] %s" % sfx_name)
+	var audio_path = "res://assets/audio/sfx/%s.wav" % sfx_name
 
-	# TODO: 替换为真实音效播放
-	# var player = AudioStreamPlayer.new()
-	# player.stream = load("res://assets/audio/sfx/%s.wav" % sfx_name)
-	# player.volume_db = linear_to_db(sound_volume)
-	# player.bus = BUS_SFX
-	# add_child(player)
-	# player.play()
-	# player.finished.connect(player.queue_free)
+	# 检查音频文件是否存在
+	if not ResourceLoader.exists(audio_path):
+		# 音频文件不存在，使用占位实现
+		print("[SFX] %s (placeholder)" % sfx_name)
+		return
+
+	# 加载并播放音频
+	var player = AudioStreamPlayer.new()
+	player.stream = load(audio_path)
+	player.volume_db = linear_to_db(sound_volume)
+	player.bus = BUS_SFX
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
 
 
 ## 获取音效名称

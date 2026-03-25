@@ -270,7 +270,8 @@ func _execute_attack(attacker: UnitInstance, target: UnitInstance) -> void:
 ## 执行治疗
 func _heal_target(healer: UnitInstance, target: UnitInstance) -> void:
 	# 治疗量为攻击力的一定比例（应用等级加成和协同加成）
-	var base_heal = healer.definition.get_attack_at_level(healer.level) * 0.5
+	# 平衡调整: 治疗系数 0.5 -> 0.7
+	var base_heal = healer.definition.get_attack_at_level(healer.level) * 0.7
 	var heal_bonus = healer.get_synergy_heal_bonus()
 	var heal_amount = int(base_heal * (1.0 + heal_bonus))
 	var actual_heal = target.heal(heal_amount)

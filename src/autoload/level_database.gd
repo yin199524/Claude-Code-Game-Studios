@@ -167,9 +167,9 @@ func _create_levels() -> void:
 	level7.gold_reward = 250
 	level7.required_level = "level_006"
 	level7.enemy_spawns = [
-		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 1.0),
-		EnemySpawn.create("enemy_scorpion", Vector2i(1, 0), 1.1),
-		EnemySpawn.create("enemy_mummy", Vector2i(2, 0), 1.0)
+		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 0.95),      # 平衡调整: 1.0 -> 0.95
+		EnemySpawn.create("enemy_scorpion", Vector2i(1, 0), 1.0),     # 平衡调整: 1.1 -> 1.0
+		EnemySpawn.create("enemy_mummy", Vector2i(2, 0), 0.95)        # 平衡调整: 1.0 -> 0.95
 	]
 	_levels[level7.id] = level7
 
@@ -186,9 +186,9 @@ func _create_levels() -> void:
 	level8.gold_reward = 300
 	level8.required_level = "level_007"
 	level8.enemy_spawns = [
-		EnemySpawn.create("enemy_elite_warrior", Vector2i(0, 0), 1.1),
-		EnemySpawn.create("enemy_mummy", Vector2i(1, 0), 1.2),
-		EnemySpawn.create("enemy_scorpion", Vector2i(2, 0), 1.1)
+		EnemySpawn.create("enemy_elite_warrior", Vector2i(0, 0), 1.0),  # 平衡调整: 1.1 -> 1.0
+		EnemySpawn.create("enemy_mummy", Vector2i(1, 0), 1.05),         # 平衡调整: 1.2 -> 1.05
+		EnemySpawn.create("enemy_scorpion", Vector2i(2, 0), 1.0)        # 平衡调整: 1.1 -> 1.0
 	]
 	_levels[level8.id] = level8
 
@@ -205,9 +205,9 @@ func _create_levels() -> void:
 	level9.gold_reward = 350
 	level9.required_level = "level_008"
 	level9.enemy_spawns = [
-		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 1.3),
-		EnemySpawn.create("enemy_shadow_mage", Vector2i(1, 0), 1.0),
-		EnemySpawn.create("enemy_mummy", Vector2i(2, 0), 1.3)
+		EnemySpawn.create("enemy_mummy", Vector2i(0, 0), 1.1),      # 平衡调整: 1.3 -> 1.1
+		EnemySpawn.create("enemy_shadow_mage", Vector2i(1, 0), 0.95), # 平衡调整: 1.0 -> 0.95
+		EnemySpawn.create("enemy_mummy", Vector2i(2, 0), 1.1)       # 平衡调整: 1.3 -> 1.1
 	]
 	_levels[level9.id] = level9
 
