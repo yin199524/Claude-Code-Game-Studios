@@ -6,7 +6,7 @@ class_name PlayerData
 extends Resource
 
 ## 存档版本号（用于数据迁移）
-@export var save_version: int = 2  # 版本 2: 添加成就和每日任务系统
+@export var save_version: int = 3  # 版本 3: 添加引导系统
 
 ## 存档创建时间（Unix timestamp）
 @export var created_at: int = 0
@@ -39,7 +39,8 @@ extends Resource
 @export var settings: Dictionary = {
 	"bgm_volume": 1.0,
 	"sfx_volume": 1.0,
-	"auto_battle_speed": 1.0
+	"auto_battle_speed": 1.0,
+	"tutorial_enabled": true
 }
 
 ## 已解锁的成就列表
@@ -60,6 +61,28 @@ extends Resource
 ## 每日任务数据
 ## {active_mission_ids: [], progress: {}, completed: [], claimed: [], last_refresh_time: int}
 @export var daily_mission_data: Dictionary = {}
+
+## 引导系统数据
+## 引导进度 {tutorial_id: current_step}
+@export var tutorial_progress: Dictionary = {}
+
+## 已完成的引导列表
+@export var completed_tutorials: Array[String] = []
+
+## 首次启动标记
+@export var is_first_launch: bool = true
+
+## 首次访问商店标记
+@export var is_first_shop_visit: bool = true
+
+## 首次战斗标记
+@export var is_first_battle: bool = true
+
+## 克制提示显示次数
+@export var counter_hint_count: int = 0
+
+## 协同提示显示次数
+@export var synergy_hint_count: int = 0
 
 
 ## 添加金币
@@ -233,10 +256,33 @@ func _migrate_data() -> void:
 		save_version = 2
 		print("[Save] Migration complete")
 
+	# 版本 2 -> 3: 添加引导系统字段
+	if save_version < 3:
+		print("[Save] Migrating save data from version %d to 3" % save_version)
+
+		# 确保新字段存在
+		if tutorial_progress == null:
+			tutorial_progress = {}
+		if completed_tutorials == null:
+			completed_tutorials = []
+		# is_first_launch, is_first_shop_visit, is_first_battle 默认为 true
+		# 对于已有存档，标记为 false（已不是首次）
+		if save_version >= 2:
+			is_first_launch = false
+			is_first_shop_visit = false
+			is_first_battle = false
+
+		# 确保设置中有引导开关
+		if not settings.has("tutorial_enabled"):
+			settings["tutorial_enabled"] = true
+
+		save_version = 3
+		print("[Save] Migration complete")
+
 
 ## 重置玩家数据（用于测试）
 func reset() -> void:
-	save_version = 2
+	save_version = 3
 	created_at = 0
 	last_played = 0
 	gold = 100
@@ -248,7 +294,8 @@ func reset() -> void:
 	settings = {
 		"bgm_volume": 1.0,
 		"sfx_volume": 0.7,
-		"auto_battle_speed": 1.0
+		"auto_battle_speed": 1.0,
+		"tutorial_enabled": true
 	}
 	unlocked_achievements = []
 	achievement_progress = {}
@@ -256,6 +303,13 @@ func reset() -> void:
 	total_enemies_defeated = 0
 	total_synergies_triggered = 0
 	daily_mission_data = {}
+	tutorial_progress = {}
+	completed_tutorials = []
+	is_first_launch = true
+	is_first_shop_visit = true
+	is_first_battle = true
+	counter_hint_count = 0
+	synergy_hint_count = 0
 
 
 ## 创建默认玩家数据

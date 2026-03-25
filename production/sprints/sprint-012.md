@@ -23,7 +23,7 @@
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Status |
 |----|------|-------------|-----------|--------------|--------|
 | T1 | 新手引导系统设计 | game-designer | 1.0 | — | ✅ Complete |
-| T2 | 引导管理器实现 | gameplay-programmer | 1.0 | T1 | 🔲 Pending |
+| T2 | 引导管理器实现 | gameplay-programmer | 1.0 | T1 | ✅ Complete |
 | T3 | 欢迎界面实现 | ui-programmer | 0.5 | T2 | 🔲 Pending |
 | T4 | 战斗教程实现 | gameplay-programmer | 1.0 | T2 | 🔲 Pending |
 | T5 | 克制关系提示 | ui-programmer | 0.5 | T4 | 🔲 Pending |
