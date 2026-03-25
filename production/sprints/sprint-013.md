@@ -24,7 +24,7 @@
 |----|------|-------------|-----------|--------------|--------|
 | T1 | 执行手动测试 (14项) | qa-tester | 2.0 | — | ⏸ Deferred |
 | T2 | 场景加载性能优化 | performance-analyst | 1.0 | — | ✅ Complete |
-| T3 | 战斗帧率优化 | performance-analyst | 0.75 | — | 🔲 Pending |
+| T3 | 战斗帧率优化 | performance-analyst | 0.75 | — | ✅ Complete |
 | T4 | 战斗动画增强 | technical-artist | 1.0 | — | 🔲 Pending |
 | T5 | QuickHint 单元测试 | gameplay-programmer | 0.25 | — | 🔲 Pending |
 

@@ -1,6 +1,7 @@
 # BattleManager.gd - 自动战斗管理器
 # 执行回合制自动战斗
 # 参考: design/gdd/auto-battle-system.md
+# 性能优化: 缓存单位列表，减少数组分配
 
 class_name BattleManager
 extends RefCounted
@@ -49,6 +50,22 @@ var battle_start_time: float = 0.0
 ## 累计时间
 var accumulated_time: float = 0.0
 
+## === 性能优化: 缓存单位列表 ===
+## 缓存的玩家单位列表（避免每次迭代）
+var _cached_player_units: Array[UnitInstance] = []
+
+## 缓存的敌人单位列表
+var _cached_enemy_units: Array[UnitInstance] = []
+
+## 缓存的所有单位列表
+var _cached_all_units: Array[UnitInstance] = []
+
+## 存活玩家单位计数
+var _player_alive_count: int = 0
+
+## 存活敌人单位计数
+var _enemy_alive_count: int = 0
+
 
 ## 初始化战斗管理器
 func initialize(layout: GridLayout) -> void:
@@ -71,8 +88,11 @@ func start_battle() -> void:
 
 	state_machine.start_battle()
 
+	# === 性能优化: 初始化缓存的单位列表 ===
+	_rebuild_unit_cache()
+
 	# 初始化所有单位的攻击冷却
-	for unit in grid_layout.get_all_units():
+	for unit in _cached_all_units:
 		unit.reset_attack_cooldown()
 		unit.is_alive = true
 		unit.current_target = null
@@ -80,6 +100,23 @@ func start_battle() -> void:
 
 	# 检测并应用协同效果（仅玩家单位）
 	_apply_synergies()
+
+
+## 重建单位缓存（战斗开始或单位死亡时调用）
+func _rebuild_unit_cache() -> void:
+	_cached_player_units.clear()
+	_cached_enemy_units.clear()
+	_cached_all_units.clear()
+
+	for unit in grid_layout._units.values():
+		_cached_all_units.append(unit)
+		if unit.is_player_unit:
+			_cached_player_units.append(unit)
+		else:
+			_cached_enemy_units.append(unit)
+
+	_player_alive_count = _cached_player_units.size()
+	_enemy_alive_count = _cached_enemy_units.size()
 
 
 ## 更新战斗（每帧调用）
@@ -105,12 +142,14 @@ func update(delta: float) -> void:
 func _execute_turn() -> void:
 	current_turn += 1
 
-	# 获取所有存活单位
-	var all_units = grid_layout.get_all_units()
-	var alive_units = all_units.filter(func(u): return u.is_alive)
+	# === 性能优化: 使用缓存的单位列表 ===
+	var alive_units: Array[UnitInstance] = []
+	for unit in _cached_all_units:
+		if unit.is_alive:
+			alive_units.append(unit)
 
 	# 按位置排序（确定性顺序）
-	alive_units.sort_custom(func(a, b): return _compare_unit_order(a, b))
+	alive_units.sort_custom(_compare_unit_order)
 
 	# 每个单位行动
 	for unit in alive_units:
@@ -131,15 +170,16 @@ func _execute_unit_action(unit: UnitInstance) -> void:
 	if unit.target_lock_timer > 0:
 		unit.target_lock_timer -= turn_duration
 
-	# 获取敌人列表
+	# === 性能优化: 使用缓存的单位列表，避免每次获取 ===
 	var enemies: Array[UnitInstance] = []
 	if unit.is_player_unit:
-		enemies = grid_layout.get_enemy_units()
+		for enemy in _cached_enemy_units:
+			if enemy.is_alive:
+				enemies.append(enemy)
 	else:
-		enemies = grid_layout.get_player_units()
-
-	# 过滤存活敌人
-	enemies = enemies.filter(func(e): return e.is_alive)
+		for ally in _cached_player_units:
+			if ally.is_alive:
+				enemies.append(ally)
 
 	# 选择目标
 	var target = _select_target(unit, enemies)
@@ -167,12 +207,16 @@ func _execute_unit_action(unit: UnitInstance) -> void:
 func _select_target(unit: UnitInstance, enemies: Array[UnitInstance]) -> UnitInstance:
 	if unit.get_class_type() == Global.ClassType.HEALER:
 		# 治疗单位选择友方
+		# === 性能优化: 使用缓存的单位列表 ===
 		var allies: Array[UnitInstance] = []
 		if unit.is_player_unit:
-			allies = grid_layout.get_player_units()
+			for ally in _cached_player_units:
+				if ally.is_alive:
+					allies.append(ally)
 		else:
-			allies = grid_layout.get_enemy_units()
-		allies = allies.filter(func(a): return a.is_alive)
+			for enemy in _cached_enemy_units:
+				if enemy.is_alive:
+					allies.append(enemy)
 		return TargetSelector.select_heal_target(unit, allies)
 	else:
 		# 攻击单位选择敌人
@@ -264,6 +308,11 @@ func _execute_attack(attacker: UnitInstance, target: UnitInstance) -> void:
 
 	# 检查死亡
 	if not target.is_alive:
+		# === 性能优化: 更新存活计数 ===
+		if target.is_player_unit:
+			_player_alive_count -= 1
+		else:
+			_enemy_alive_count -= 1
 		unit_died.emit(target)
 
 
@@ -282,15 +331,13 @@ func _heal_target(healer: UnitInstance, target: UnitInstance) -> void:
 
 ## 检查战斗结束
 func _check_battle_end() -> bool:
-	var player_alive = grid_layout.get_player_units().filter(func(u): return u.is_alive).size()
-	var enemy_alive = grid_layout.get_enemy_units().filter(func(u): return u.is_alive).size()
-
-	if enemy_alive == 0:
+	# === 性能优化: 使用缓存的存活计数，避免数组过滤 ===
+	if _enemy_alive_count == 0:
 		# 玩家胜利
 		_end_battle(true)
 		return true
 
-	if player_alive == 0:
+	if _player_alive_count == 0:
 		# 玩家失败
 		_end_battle(false)
 		return true
@@ -359,8 +406,8 @@ func get_battle_state() -> Dictionary:
 		"is_battling": is_battling,
 		"is_paused": is_paused,
 		"battle_speed": battle_speed,
-		"player_units_alive": grid_layout.get_player_units().filter(func(u): return u.is_alive).size(),
-		"enemy_units_alive": grid_layout.get_enemy_units().filter(func(u): return u.is_alive).size(),
+		"player_units_alive": _player_alive_count,
+		"enemy_units_alive": _enemy_alive_count,
 		"elapsed_time": Time.get_ticks_msec() / 1000.0 - battle_start_time if is_battling else 0.0
 	}
 
@@ -380,12 +427,12 @@ func _compare_unit_order(a: UnitInstance, b: UnitInstance) -> bool:
 
 ## 检测并应用协同效果
 func _apply_synergies() -> void:
-	var player_units = grid_layout.get_player_units()
-	if player_units.is_empty():
+	# === 性能优化: 使用缓存的玩家单位列表 ===
+	if _cached_player_units.is_empty():
 		return
 
 	# 检测激活的协同
-	active_synergies = synergy_manager.detect_synergies(player_units, grid_layout)
+	active_synergies = synergy_manager.detect_synergies(_cached_player_units, grid_layout)
 
 	if active_synergies.is_empty():
 		return
@@ -396,7 +443,7 @@ func _apply_synergies() -> void:
 		synergy_names.append(synergy.display_name)
 
 	# 为每个玩家单位计算并应用协同加成
-	for unit in player_units:
+	for unit in _cached_player_units:
 		var bonuses = synergy_manager.calculate_synergy_bonuses(unit, active_synergies)
 		unit.set_synergy_bonuses(bonuses)
 

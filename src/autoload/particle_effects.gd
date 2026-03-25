@@ -1,10 +1,28 @@
 # particle_effects.gd - 粒子效果管理器
 # 提供简单的粒子效果（胜利/失败）
+# 性能优化: 限制粒子数量，批量创建
 
 extends Node
 
+## === 性能优化: 粒子数量限制 ===
+## 最大胜利粒子数
+const MAX_VICTORY_PARTICLES: int = 20
+
+## 最大失败粒子数
+const MAX_DEFEAT_PARTICLES: int = 15
+
+## 最大升级粒子数
+const MAX_UPGRADE_PARTICLES: int = 15
+
+## 最大购买粒子数
+const MAX_PURCHASE_PARTICLES: int = 8
+
+
 ## 创建胜利粒子效果
-static func create_victory_particles(parent: Node, position: Vector2, count: int = 30) -> void:
+static func create_victory_particles(parent: Node, position: Vector2, count: int = MAX_VICTORY_PARTICLES) -> void:
+	# === 性能优化: 限制最大粒子数 ===
+	count = mini(count, MAX_VICTORY_PARTICLES)
+
 	for i in range(count):
 		var particle = ColorRect.new()
 		particle.color = Color(1.0, 0.85 + randf() * 0.15, 0.2, 1.0)
@@ -32,7 +50,10 @@ static func create_victory_particles(parent: Node, position: Vector2, count: int
 
 
 ## 创建失败粒子效果
-static func create_defeat_particles(parent: Node, position: Vector2, count: int = 20) -> void:
+static func create_defeat_particles(parent: Node, position: Vector2, count: int = MAX_DEFEAT_PARTICLES) -> void:
+	# === 性能优化: 限制最大粒子数 ===
+	count = mini(count, MAX_DEFEAT_PARTICLES)
+
 	for i in range(count):
 		var particle = ColorRect.new()
 		particle.color = Color(0.6 + randf() * 0.2, 0.2, 0.2, 1.0)
@@ -60,7 +81,7 @@ static func create_defeat_particles(parent: Node, position: Vector2, count: int 
 
 ## 创建购买成功粒子效果
 static func create_purchase_particles(parent: Node, position: Vector2) -> void:
-	for i in range(10):
+	for i in range(MAX_PURCHASE_PARTICLES):
 		var particle = ColorRect.new()
 		particle.color = Color(0.3, 0.8, 0.4, 1.0)
 		particle.size = Vector2(randf_range(4, 8), randf_range(4, 8))
@@ -80,7 +101,10 @@ static func create_purchase_particles(parent: Node, position: Vector2) -> void:
 
 
 ## 创建升级粒子效果
-static func create_upgrade_particles(parent: Node, position: Vector2, count: int = 25) -> void:
+static func create_upgrade_particles(parent: Node, position: Vector2, count: int = MAX_UPGRADE_PARTICLES) -> void:
+	# === 性能优化: 限制最大粒子数 ===
+	count = mini(count, MAX_UPGRADE_PARTICLES)
+
 	for i in range(count):
 		var particle = ColorRect.new()
 		# 金色到黄色的渐变
