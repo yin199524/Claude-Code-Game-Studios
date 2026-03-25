@@ -255,13 +255,7 @@ func show_counter_hint() -> void:
 		player_data.counter_hint_count += 1
 		SaveManager.save_game()
 
-	# 短暂显示提示
-	var step_data = TUTORIAL_STEPS[TutorialID.COUNTER][0]
-	show_hint.emit(step_data.message, NodePath(""))
-
-	# 3秒后自动隐藏
-	await get_tree().create_timer(3.0).timeout
-	hide_hint.emit()
+	# 显示由 QuickHint 组件处理，这里只更新计数
 
 
 ## 显示协同提示
@@ -274,9 +268,7 @@ func show_synergy_hint(synergy_name: String) -> void:
 		player_data.synergy_hint_count += 1
 		SaveManager.save_game()
 
-	var step_data = TUTORIAL_STEPS[TutorialID.SYNERGY][0]
-	var message = step_data.message + "\n[%s]" % synergy_name
-	show_hint.emit(message, NodePath(""))
+	# 显示由 QuickHint 组件处理，这里只更新计数
 
 	# 3秒后自动隐藏
 	await get_tree().create_timer(3.0).timeout

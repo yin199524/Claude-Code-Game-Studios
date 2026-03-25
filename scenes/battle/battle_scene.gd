@@ -34,6 +34,9 @@ var battle_rewards: Dictionary = {}
 ## 战斗教程组件
 var battle_tutorial: Control = null
 
+## 快速提示组件
+var quick_hint: Control = null
+
 
 func _ready() -> void:
 	# 加载关卡数据
@@ -156,6 +159,12 @@ func _setup_tutorial() -> void:
 	battle_tutorial.anchors_preset = Control.PRESET_FULL_RECT
 	add_child(battle_tutorial)
 
+	# 创建快速提示组件
+	quick_hint = preload("res://scenes/tutorial/quick_hint.gd").new()
+	quick_hint.name = "QuickHint"
+	quick_hint.anchors_preset = Control.PRESET_FULL_RECT
+	add_child(quick_hint)
+
 
 ## 加载玩家布局
 func _load_player_layout() -> void:
@@ -254,6 +263,15 @@ func _on_unit_attacked(attacker: UnitInstance, target: UnitInstance, damage: int
 
 	# 攻击动画
 	_play_attack_animation(attacker, target)
+
+	# 显示克制提示（仅玩家单位触发时）
+	if counter_status == 1 and attacker.is_player_unit:
+		# 检查是否应该显示
+		if TutorialManager.should_show_tutorial(TutorialManager.TutorialID.COUNTER):
+			if quick_hint and quick_hint.has_method("show_counter_hint"):
+				quick_hint.show_counter_hint()
+			# 更新提示计数
+			TutorialManager.show_counter_hint()
 
 
 ## 播放攻击动画
@@ -645,6 +663,13 @@ func _on_synergies_activated(synergy_names: Array[String]) -> void:
 		# 查找对应的协同ID
 		var synergy_id = _get_synergy_id_by_name(synergy_name)
 		AchievementManager.trigger_event("synergy_triggered", {"synergy_id": synergy_id})
+
+		# 显示协同提示
+		if TutorialManager.should_show_tutorial(TutorialManager.TutorialID.SYNERGY):
+			if quick_hint and quick_hint.has_method("show_synergy_hint"):
+				quick_hint.show_synergy_hint(synergy_name)
+			# 更新提示计数
+			TutorialManager.show_synergy_hint(synergy_name)
 
 	DailyMissionManager.trigger_event(Global.DailyMissionType.TRIGGER_SYNERGY, synergy_names.size())
 
