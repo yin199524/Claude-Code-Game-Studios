@@ -22,8 +22,8 @@
 
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Status |
 |----|------|-------------|-----------|--------------|--------|
-| T1 | 执行手动测试 (14项) | qa-tester | 2.0 | — | 🔲 Pending |
-| T2 | 场景加载性能优化 | performance-analyst | 1.0 | — | 🔲 Pending |
+| T1 | 执行手动测试 (14项) | qa-tester | 2.0 | — | ⏸ Deferred |
+| T2 | 场景加载性能优化 | performance-analyst | 1.0 | — | ✅ Complete |
 | T3 | 战斗帧率优化 | performance-analyst | 0.75 | — | 🔲 Pending |
 | T4 | 战斗动画增强 | technical-artist | 1.0 | — | 🔲 Pending |
 | T5 | QuickHint 单元测试 | gameplay-programmer | 0.25 | — | 🔲 Pending |
@@ -35,6 +35,10 @@
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Status |
 |----|------|-------------|-----------|--------------|--------|
 | T6 | 统计数据面板 | ui-programmer | 0.75 | — | 🔲 Pending |
+
+**T2 场景加载性能优化 - 扩展优化:**
+- 关卡选择场景: 延迟加载 UI、预览面板延迟创建、UI 缓存
+- 商店场景: 延迟加载单位列表、提示面板延迟创建、增量加载
 | T7 | 确认对话框组件 | ui-programmer | 0.5 | — | 🔲 Pending |
 | T8 | 错误处理增强 | gameplay-programmer | 0.5 | — | 🔲 Pending |
 | T9 | 加载状态指示器 | ui-programmer | 0.5 | — | 🔲 Pending |

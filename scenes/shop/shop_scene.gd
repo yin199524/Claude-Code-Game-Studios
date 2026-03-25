@@ -1,5 +1,6 @@
 # shop_scene.gd - 商店场景脚本
 # 显示可购买单位，处理购买逻辑
+# 性能优化: 延迟加载 UI，缓存已创建的元素
 
 extends Control
 
@@ -9,23 +10,82 @@ signal purchase_success(unit_id: String)
 ## 购买失败信号
 signal purchase_failed(reason: String)
 
-## 悬停提示面板
+## 悬停提示面板（延迟创建）
 var tooltip_panel: PanelContainer = null
 
 ## 当前显示提示的单位
 var current_tooltip_unit: UnitDefinition = null
 
+## 缓存的单位 UI 项目
+var _cached_unit_items: Dictionary = {}
+
+## 是否已初始化单位列表
+var _is_list_initialized: bool = false
+
 
 func _ready() -> void:
-	_create_tooltip()
 	_connect_signals()
 	_update_gold_display()
 	_update_owned_count()
-	_populate_unit_list()
+	# 延迟加载单位列表
+	_schedule_load_unit_list()
 
 
-## 创建悬停提示面板
-func _create_tooltip() -> void:
+## 安排延迟加载单位列表
+func _schedule_load_unit_list() -> void:
+	var list = $VBoxContainer/ScrollContainer/UnitList
+
+	# 显示加载提示
+	var loading_label = Label.new()
+	loading_label.name = "LoadingLabel"
+	loading_label.text = "加载中..."
+	loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	loading_label.add_theme_font_size_override("font_size", 16)
+	loading_label.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7, 1))
+	list.add_child(loading_label)
+
+	# 下一帧开始加载
+	call_deferred("_start_incremental_load")
+
+
+## 增量加载单位列表
+func _start_incremental_load() -> void:
+	var list = $VBoxContainer/ScrollContainer/UnitList
+
+	# 移除加载提示
+	var loading = list.get_node_or_null("LoadingLabel")
+	if loading:
+		loading.queue_free()
+
+	# 清空现有项目
+	for child in list.get_children():
+		if child.name != "LoadingLabel":
+			child.queue_free()
+
+	await get_tree().process_frame
+
+	# 获取所有可购买单位
+	var units = UnitDatabase.get_all_units()
+
+	# 每帧加载3个单位，保持UI响应
+	var load_count = 0
+	for unit in units:
+		var item = _create_unit_item(unit)
+		list.add_child(item)
+		load_count += 1
+
+		# 每3个单位等待一帧
+		if load_count % 3 == 0:
+			await get_tree().process_frame
+
+	_is_list_initialized = true
+
+
+## 创建悬停提示面板（延迟创建）
+func _ensure_tooltip() -> void:
+	if tooltip_panel != null:
+		return
+
 	tooltip_panel = PanelContainer.new()
 	tooltip_panel.visible = false
 	tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -100,8 +160,16 @@ func _update_owned_count() -> void:
 	label.text = "📦 已拥有: %d 个单位" % SaveManager.get_unit_count()
 
 
-## 填充单位列表
+## 填充单位列表（刷新时使用）
 func _populate_unit_list() -> void:
+	if _is_list_initialized:
+		_refresh_unit_list()
+	else:
+		_start_incremental_load()
+
+
+## 刷新单位列表
+func _refresh_unit_list() -> void:
 	var list = $VBoxContainer/ScrollContainer/UnitList
 
 	# 清空现有项目
@@ -308,6 +376,9 @@ func _create_unit_item(unit: UnitDefinition) -> Control:
 
 ## 单位悬停进入
 func _on_unit_hover_entered(unit: UnitDefinition, panel: Control) -> void:
+	# 确保提示面板已创建
+	_ensure_tooltip()
+
 	current_tooltip_unit = unit
 	_update_tooltip_content(unit)
 

@@ -1,23 +1,30 @@
 # level_select.gd - 关卡选择场景脚本
 # 显示关卡列表，处理关卡选择和解锁状态
+# 性能优化: 延迟加载 UI，缓存已创建的元素
 
 extends Control
-
-## 关卡按钮场景（动态创建）
-var level_button_scene: PackedScene = null
 
 ## 当前选中的关卡
 var selected_level_id: String = ""
 
-## 预览弹窗
+## 预览弹窗（延迟创建）
 var preview_panel: Control = null
+
+## 缓存的世界分区 UI
+var _cached_world_sections: Dictionary = {}
+
+## 是否已初始化关卡列表
+var _is_list_initialized: bool = false
+
+## 延迟加载帧数间隔（每帧加载数量）
+const LOAD_PER_FRAME: int = 2
 
 
 func _ready() -> void:
 	_connect_signals()
 	_update_gold_display()
-	_create_preview_panel()
-	_populate_level_list()
+	# 延迟加载关卡列表，先显示基础 UI
+	_schedule_load_level_list()
 
 
 func _connect_signals() -> void:
@@ -31,8 +38,67 @@ func _update_gold_display() -> void:
 	label.text = "%d" % SaveManager.get_gold()
 
 
-## 创建预览弹窗（初始隐藏）
-func _create_preview_panel() -> void:
+## 安排延迟加载关卡列表
+func _schedule_load_level_list() -> void:
+	# 第一帧先显示空列表容器
+	var list = $VBoxContainer/LevelList/LevelListContent
+
+	# 显示加载提示
+	var loading_label = Label.new()
+	loading_label.name = "LoadingLabel"
+	loading_label.text = "加载中..."
+	loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	loading_label.add_theme_font_size_override("font_size", 16)
+	loading_label.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7, 1))
+	list.add_child(loading_label)
+
+	# 下一帧开始加载
+	call_deferred("_start_incremental_load")
+
+
+## 增量加载关卡列表
+func _start_incremental_load() -> void:
+	var list = $VBoxContainer/LevelList/LevelListContent
+
+	# 移除加载提示
+	var loading = list.get_node_or_null("LoadingLabel")
+	if loading:
+		loading.queue_free()
+
+	# 清空现有内容
+	for child in list.get_children():
+		if child.name != "LoadingLabel":
+			child.queue_free()
+
+	await get_tree().process_frame
+
+	# 按世界分组显示关卡
+	var worlds = WorldDatabase.get_all_worlds()
+
+	for world in worlds:
+		# 跳过没有关卡的世界
+		if world.level_ids.is_empty():
+			continue
+
+		# 检查缓存
+		if _cached_world_sections.has(world.id):
+			list.add_child(_cached_world_sections[world.id].duplicate())
+		else:
+			var world_section = _create_world_section(world)
+			_cached_world_sections[world.id] = world_section.duplicate()
+			list.add_child(world_section)
+
+		# 每加载一个世界后等待一帧，保持 UI 响应
+		await get_tree().process_frame
+
+	_is_list_initialized = true
+
+
+## 创建预览弹窗（延迟创建，仅在首次使用时）
+func _ensure_preview_panel() -> void:
+	if preview_panel != null:
+		return
+
 	preview_panel = Control.new()
 	preview_panel.name = "LevelPreviewPanel"
 	preview_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -58,7 +124,7 @@ func _create_preview_panel() -> void:
 	popup.name = "PopupContainer"
 	popup.set_anchors_preset(Control.PRESET_CENTER)
 	popup.custom_minimum_size = Vector2(500, 400)
-	popup.position = Vector2(110, 440)  # 屏幕中心偏上
+	popup.position = Vector2(110, 440)
 
 	var popup_style = StyleBoxFlat.new()
 	popup_style.bg_color = Color(0.12, 0.15, 0.22, 0.98)
@@ -144,6 +210,9 @@ func _create_preview_panel() -> void:
 
 ## 显示关卡预览
 func show_preview(level: LevelDefinition) -> void:
+	# 确保预览面板已创建
+	_ensure_preview_panel()
+
 	selected_level_id = level.id
 
 	var popup = preview_panel.get_node("PopupContainer")
@@ -305,26 +374,42 @@ func _on_start_battle_pressed() -> void:
 	SceneTransition.change_scene("res://scenes/battle/battle_setup.tscn")
 
 
-## 填充关卡列表（按世界分组）
+## 填充关卡列表（刷新时使用）
 func _populate_level_list() -> void:
+	if _is_list_initialized:
+		# 已初始化，使用缓存快速刷新
+		_refresh_level_list()
+	else:
+		# 未初始化，执行增量加载
+		_start_incremental_load()
+
+
+## 刷新关卡列表（使用缓存）
+func _refresh_level_list() -> void:
 	var list = $VBoxContainer/LevelList/LevelListContent
 
-	# 清空现有按钮
+	# 清空现有内容
 	for child in list.get_children():
 		child.queue_free()
 
-	# 等待子节点释放
 	await get_tree().process_frame
 
-	# 按世界分组显示关卡
-	var worlds = WorldDatabase.get_all_worlds()
+	# 使用缓存重新创建
+	for world_id in _cached_world_sections.keys():
+		var cached = _cached_world_sections[world_id]
+		# 需要重新计算解锁状态，所以重新创建
+		var world = WorldDatabase.get_world(world_id)
+		if world:
+			var world_section = _create_world_section(world)
+			list.add_child(world_section)
+			_cached_world_sections[world_id] = world_section.duplicate()
 
-	for world in worlds:
-		# 跳过没有关卡的世界（预留内容）
-		if world.level_ids.is_empty():
-			continue
-		var world_section = _create_world_section(world)
-		list.add_child(world_section)
+
+## 强制刷新关卡列表（当解锁状态改变时调用）
+func force_refresh() -> void:
+	_cached_world_sections.clear()
+	_is_list_initialized = false
+	_start_incremental_load()
 
 
 ## 创建世界分区
