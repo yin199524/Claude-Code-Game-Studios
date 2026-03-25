@@ -21,6 +21,25 @@ enum Rarity {
 	LEGENDARY   ## 传说
 }
 
+## 成就类别枚举
+enum AchievementCategory {
+	PROGRESS,   ## 进度类 - 通关相关
+	COLLECTION, ## 收集类 - 单位收集
+	COMBAT,     ## 战斗类 - 击杀敌人
+	UPGRADE,    ## 升级类 - 单位升级
+	SYNERGY,    ## 协同类 - 协同效果
+	SPECIAL     ## 特殊类 - 特殊条件
+}
+
+## 每日任务类型枚举
+enum DailyMissionType {
+	WIN_LEVELS,     ## 通关关卡
+	UPGRADE_UNITS,  ## 升级单位
+	BUY_UNITS,      ## 购买单位
+	DEFEAT_ENEMIES, ## 击败敌人
+	TRIGGER_SYNERGY ## 触发协同
+}
+
 ## 稀有度属性乘数
 ## 参考: design/gdd/unit-data-definition.md
 const RARITY_MULTIPLIERS: Dictionary = {

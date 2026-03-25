@@ -42,6 +42,25 @@ extends Resource
 	"auto_battle_speed": 1.0
 }
 
+## 已解锁的成就列表
+@export var unlocked_achievements: Array[String] = []
+
+## 成就进度 {achievement_id: current_value}
+@export var achievement_progress: Dictionary = {}
+
+## 成就解锁时间 {achievement_id: unix_timestamp}
+@export var achievement_unlock_times: Dictionary = {}
+
+## 累计击败敌人数量
+@export var total_enemies_defeated: int = 0
+
+## 累计触发协同效果次数
+@export var total_synergies_triggered: int = 0
+
+## 每日任务数据
+## {active_mission_ids: [], progress: {}, completed: [], claimed: [], last_refresh_time: int}
+@export var daily_mission_data: Dictionary = {}
+
 
 ## 添加金币
 func add_gold(amount: int) -> void:
@@ -196,6 +215,12 @@ func reset() -> void:
 		"sfx_volume": 1.0,
 		"auto_battle_speed": 1.0
 	}
+	unlocked_achievements = []
+	achievement_progress = {}
+	achievement_unlock_times = {}
+	total_enemies_defeated = 0
+	total_synergies_triggered = 0
+	daily_mission_data = {}
 
 
 ## 创建默认玩家数据
