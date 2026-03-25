@@ -29,8 +29,14 @@ func _ready() -> void:
 	# 创建成就通知
 	_create_achievement_notification()
 
+	# 创建引导提示组件
+	_create_tutorial_hint()
+
 	# 连接存档变化信号
 	SaveManager.data_changed.connect(_update_gold_display)
+
+	# 检查是否显示欢迎引导
+	_check_welcome_tutorial()
 
 
 func _process(delta: float) -> void:
@@ -182,3 +188,35 @@ func _on_achievement_pressed() -> void:
 func _on_mission_pressed() -> void:
 	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	SceneTransition.change_scene("res://scenes/daily_mission/daily_mission_panel.tscn")
+
+
+## 创建引导提示组件
+func _create_tutorial_hint() -> void:
+	var hint_scene = preload("res://scenes/tutorial/tutorial_hint.gd")
+	var tutorial_hint = Control.new()
+	tutorial_hint.set_script(hint_scene)
+	tutorial_hint.name = "TutorialHint"
+	tutorial_hint.anchors_preset = Control.PRESET_FULL_RECT
+	add_child(tutorial_hint)
+
+
+## 检查是否显示欢迎引导
+func _check_welcome_tutorial() -> void:
+	# 延迟一帧检查，确保 TutorialManager 已初始化
+	await get_tree().process_frame
+
+	if TutorialManager.should_show_tutorial(TutorialManager.TutorialID.WELCOME):
+		_show_welcome_screen()
+
+
+## 显示欢迎界面
+func _show_welcome_screen() -> void:
+	var welcome = preload("res://scenes/tutorial/welcome_screen.tscn").instantiate()
+	welcome.welcome_completed.connect(_on_welcome_completed)
+	add_child(welcome)
+
+
+## 欢迎完成回调
+func _on_welcome_completed() -> void:
+	# 可以在这里执行欢迎完成后的操作
+	pass
