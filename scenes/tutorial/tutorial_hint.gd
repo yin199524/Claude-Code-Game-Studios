@@ -98,16 +98,13 @@ func _setup_ui() -> void:
 
 
 func _setup_button_style(button: Button, bg_color: Color) -> void:
-	var style = StyleBoxFlat.new()
-	style.bg_color = bg_color
-	style.border_color = bg_color.lightened(0.2)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
-	button.add_theme_stylebox_override("normal", style)
-
-	var hover_style = style.duplicate()
-	hover_style.bg_color = bg_color.lightened(0.15)
-	button.add_theme_stylebox_override("hover", hover_style)
+	# 使用统一的按钮样式
+	if bg_color.r < 0.3 and bg_color.g > 0.4:  # 绿色调
+		ButtonStyles.apply_success(button)
+	elif bg_color.r < 0.3 and bg_color.b > 0.4:  # 蓝色调
+		ButtonStyles.apply_primary(button)
+	else:
+		ButtonStyles.apply_secondary(button)
 
 
 func _on_show_hint(message: String, highlight_path: NodePath) -> void:

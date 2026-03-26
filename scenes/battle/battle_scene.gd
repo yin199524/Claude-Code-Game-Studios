@@ -826,14 +826,40 @@ func _on_synergies_activated(synergy_names: Array[String]) -> void:
 		var synergy_id = _get_synergy_id_by_name(synergy_name)
 		AchievementManager.trigger_event("synergy_triggered", {"synergy_id": synergy_id})
 
-		# 显示协同提示
+		# 显示增强的协同提示
 		if TutorialManager.should_show_tutorial(TutorialManager.TutorialID.SYNERGY):
-			if quick_hint and quick_hint.has_method("show_synergy_hint"):
-				quick_hint.show_synergy_hint(synergy_name)
+			_show_enhanced_synergy_hint(synergy_name, synergy_id)
 			# 更新提示计数
 			TutorialManager.show_synergy_hint(synergy_name)
 
 	DailyMissionManager.trigger_event(Global.DailyMissionType.TRIGGER_SYNERGY, synergy_names.size())
+
+
+## 显示增强的协同提示
+func _show_enhanced_synergy_hint(synergy_name: String, synergy_id: String) -> void:
+	# 获取协同效果定义
+	var synergy_effect = null
+	var affected_count = 0
+
+	# 从 SynergyManager 获取协同定义
+	var synergy_manager = SynergyManager.new()
+	var all_synergies = synergy_manager.get_all_synergies()
+	for synergy in all_synergies:
+		if synergy.id == synergy_id:
+			synergy_effect = synergy
+			break
+
+	# 计算受影响的单位数
+	if synergy_effect:
+		var player_units = grid_layout.get_player_units()
+		for unit in player_units:
+			if unit.is_alive:
+				affected_count += 1
+
+	# 显示增强提示
+	var hint = preload("res://scenes/notification/synergy_hint.tscn").instantiate()
+	add_child(hint)
+	hint.show_synergy(synergy_name, synergy_effect, affected_count)
 
 
 ## === 战斗动画增强: 协同连线特效 ===

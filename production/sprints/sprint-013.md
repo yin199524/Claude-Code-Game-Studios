@@ -26,7 +26,7 @@
 | T2 | 场景加载性能优化 | performance-analyst | 1.0 | — | ✅ Complete |
 | T3 | 战斗帧率优化 | performance-analyst | 0.75 | — | ✅ Complete |
 | T4 | 战斗动画增强 | technical-artist | 1.0 | — | ✅ Complete |
-| T5 | QuickHint 单元测试 | gameplay-programmer | 0.25 | — | 🔲 Pending |
+| T5 | QuickHint 单元测试 | gameplay-programmer | 0.25 | — | ✅ Complete |
 
 **Total Must Have: 5.0 days**
 
@@ -34,14 +34,14 @@
 
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Status |
 |----|------|-------------|-----------|--------------|--------|
-| T6 | 统计数据面板 | ui-programmer | 0.75 | — | 🔲 Pending |
+| T6 | 统计数据面板 | ui-programmer | 0.75 | — | ✅ Complete |
 
 **T2 场景加载性能优化 - 扩展优化:**
 - 关卡选择场景: 延迟加载 UI、预览面板延迟创建、UI 缓存
 - 商店场景: 延迟加载单位列表、提示面板延迟创建、增量加载
-| T7 | 确认对话框组件 | ui-programmer | 0.5 | — | 🔲 Pending |
-| T8 | 错误处理增强 | gameplay-programmer | 0.5 | — | 🔲 Pending |
-| T9 | 加载状态指示器 | ui-programmer | 0.5 | — | 🔲 Pending |
+| T7 | 确认对话框组件 | ui-programmer | 0.5 | — | ✅ Complete |
+| T8 | 错误处理增强 | gameplay-programmer | 0.5 | — | ✅ Complete |
+| T9 | 加载状态指示器 | ui-programmer | 0.5 | — | ✅ Complete |
 
 **Total Should Have: 2.25 days**
 
@@ -49,9 +49,9 @@
 
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Status |
 |----|------|-------------|-----------|--------------|--------|
-| T10 | 按钮悬停状态统一 | ux-designer | 0.25 | — | 🔲 Pending |
-| T11 | 协同效果提示优化 | ui-programmer | 0.5 | — | 🔲 Pending |
-| T12 | 引导跳过功能 | gameplay-programmer | 0.25 | — | 🔲 Pending |
+| T10 | 按钮悬停状态统一 | ux-designer | 0.25 | — | ✅ Complete |
+| T11 | 协同效果提示优化 | ui-programmer | 0.5 | — | ✅ Complete |
+| T12 | 引导跳过功能 | gameplay-programmer | 0.25 | — | ✅ Complete |
 
 **Total Nice to Have: 1.0 day**
 
@@ -64,11 +64,11 @@
 ## Definition of Done
 
 - [ ] 14 项手动测试执行完毕
-- [ ] 场景加载时间 < 2 秒
-- [ ] 战斗帧率稳定 60 FPS
-- [ ] 战斗动画流畅自然
-- [ ] 统计数据面板功能完整
-- [ ] 确认对话框组件可用
+- [x] 场景加载时间 < 2 秒
+- [x] 战斗帧率稳定 60 FPS
+- [x] 战斗动画流畅自然
+- [x] 统计数据面板功能完整
+- [x] 确认对话框组件可用
 - [ ] 无 S1/S2 Bug
 
 ---

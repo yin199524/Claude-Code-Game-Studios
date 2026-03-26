@@ -6,7 +6,7 @@ class_name PlayerData
 extends Resource
 
 ## 存档版本号（用于数据迁移）
-@export var save_version: int = 3  # 版本 3: 添加引导系统
+@export var save_version: int = 4  # 版本 4: 添加统计数据字段
 
 ## 存档创建时间（Unix timestamp）
 @export var created_at: int = 0
@@ -57,6 +57,18 @@ extends Resource
 
 ## 累计触发协同效果次数
 @export var total_synergies_triggered: int = 0
+
+## 累计获得金币
+@export var total_gold_earned: int = 0
+
+## 累计游戏时长（秒）
+@export var total_play_time: int = 0
+
+## 最高连胜记录
+@export var max_win_streak: int = 0
+
+## 当前连胜
+@export var current_win_streak: int = 0
 
 ## 每日任务数据
 ## {active_mission_ids: [], progress: {}, completed: [], claimed: [], last_refresh_time: int}
@@ -279,10 +291,27 @@ func _migrate_data() -> void:
 		save_version = 3
 		print("[Save] Migration complete")
 
+	# 版本 3 -> 4: 添加统计数据字段
+	if save_version < 4:
+		print("[Save] Migrating save data from version %d to 4" % save_version)
+
+		# 确保新字段存在
+		if total_gold_earned == null:
+			total_gold_earned = 0
+		if total_play_time == null:
+			total_play_time = 0
+		if max_win_streak == null:
+			max_win_streak = 0
+		if current_win_streak == null:
+			current_win_streak = 0
+
+		save_version = 4
+		print("[Save] Migration complete")
+
 
 ## 重置玩家数据（用于测试）
 func reset() -> void:
-	save_version = 3
+	save_version = 4
 	created_at = 0
 	last_played = 0
 	gold = 100
@@ -302,6 +331,10 @@ func reset() -> void:
 	achievement_unlock_times = {}
 	total_enemies_defeated = 0
 	total_synergies_triggered = 0
+	total_gold_earned = 0
+	total_play_time = 0
+	max_win_streak = 0
+	current_win_streak = 0
 	daily_mission_data = {}
 	tutorial_progress = {}
 	completed_tutorials = []
@@ -320,3 +353,63 @@ static func create_default() -> PlayerData:
 	# 给玩家一些初始单位
 	data.add_unit("unit_warrior", 1)
 	return data
+
+
+## 添加获得金币（记录累计）
+func add_gold_earned(amount: int) -> void:
+	add_gold(amount)
+	total_gold_earned += amount
+
+
+## 更新连胜记录
+func record_battle_result(victory: bool) -> void:
+	if victory:
+		current_win_streak += 1
+		if current_win_streak > max_win_streak:
+			max_win_streak = current_win_streak
+	else:
+		current_win_streak = 0
+
+
+## 累计游戏时长
+func add_play_time(seconds: int) -> void:
+	total_play_time += seconds
+
+
+## 获取格式化的游戏时长
+func get_formatted_play_time() -> String:
+	var hours = total_play_time / 3600
+	var minutes = (total_play_time % 3600) / 60
+	if hours > 0:
+		return "%d小时%d分钟" % [hours, minutes]
+	else:
+		return "%d分钟" % minutes
+
+
+## 获取总星级数
+func get_total_stars() -> int:
+	var total = 0
+	for level_id in level_stars:
+		total += level_stars[level_id]
+	return total
+
+
+## 获取成就完成数
+func get_achievement_count() -> int:
+	return unlocked_achievements.size()
+
+
+## 获取统计数据字典
+func get_statistics() -> Dictionary:
+	return {
+		"play_time": get_formatted_play_time(),
+		"total_gold_earned": total_gold_earned,
+		"enemies_defeated": total_enemies_defeated,
+		"synergies_triggered": total_synergies_triggered,
+		"levels_completed": completed_levels.size(),
+		"total_stars": get_total_stars(),
+		"units_owned": owned_units.size(),
+		"achievements_unlocked": get_achievement_count(),
+		"max_win_streak": max_win_streak,
+		"current_streak": current_win_streak,
+	}

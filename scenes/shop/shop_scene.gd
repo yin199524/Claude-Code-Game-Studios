@@ -328,6 +328,7 @@ func _create_unit_item(unit: UnitDefinition) -> Control:
 			var upgrade_button = Button.new()
 			upgrade_button.text = "升级"
 			upgrade_button.custom_minimum_size = Vector2(75, 32)
+			ButtonStyles.apply_primary(upgrade_button)
 
 			# 检查是否买得起
 			var can_afford = SaveManager.can_afford(upgrade_cost)
@@ -356,6 +357,7 @@ func _create_unit_item(unit: UnitDefinition) -> Control:
 		var buy_button = Button.new()
 		buy_button.text = "购买"
 		buy_button.custom_minimum_size = Vector2(75, 32)
+		ButtonStyles.apply_primary(buy_button)
 
 		# 检查是否买得起
 		var can_afford = SaveManager.can_afford(unit.get_price())
@@ -530,10 +532,36 @@ func _on_buy_pressed(unit_id: String, price: int) -> void:
 		purchase_failed.emit("金币不足")
 		return
 
+	# 显示购买确认对话框
+	var unit = UnitDatabase.get_unit(unit_id)
+	var unit_name = unit.display_name if unit else unit_id
+	var dialog = preload("res://scenes/dialog/confirm_dialog.tscn").instantiate()
+	dialog.dialog_title = "购买确认"
+	dialog.dialog_message = "确定要购买 %s 吗？" % unit_name
+	dialog.confirm_text = "购买 (%d 金币)" % price
+	dialog.cancel_text = "取消"
+	dialog.price_info = "💰 %d" % price
+	dialog.confirmed.connect(_execute_purchase.bind(unit_id, price))
+	dialog.cancelled.connect(_on_purchase_cancelled)
+	add_child(dialog)
+
+
+## 执行购买
+func _execute_purchase(unit_id: String, price: int) -> void:
+	# 再次检查余额
+	if not SaveManager.can_afford(price):
+		SoundManager.play_sfx(SoundManager.SFX.PURCHASE_FAIL)
+		if ErrorManager != null:
+			ErrorManager.report_purchase_failed("金币不足，无法完成购买")
+		purchase_failed.emit("金币不足")
+		return
+
 	# 扣除金币
 	var success = SaveManager.spend_gold(price)
 	if not success:
 		SoundManager.play_sfx(SoundManager.SFX.PURCHASE_FAIL)
+		if ErrorManager != null:
+			ErrorManager.report_purchase_failed("购买失败，请稍后重试")
 		purchase_failed.emit("购买失败")
 		return
 
@@ -561,13 +589,38 @@ func _on_buy_pressed(unit_id: String, price: int) -> void:
 	print("购买成功: %s" % unit_id)
 
 
+## 购买取消
+func _on_purchase_cancelled() -> void:
+	# 用户取消了购买，无需额外操作
+	pass
+
+
 ## 升级按钮按下
 func _on_upgrade_pressed(unit_id: String, cost: int) -> void:
+	# 显示升级确认对话框
+	var unit = UnitDatabase.get_unit(unit_id)
+	var unit_name = unit.display_name if unit else unit_id
+	var current_level = SaveManager.get_unit_level(unit_id)
+	var dialog = preload("res://scenes/dialog/confirm_dialog.tscn").instantiate()
+	dialog.dialog_title = "升级确认"
+	dialog.dialog_message = "确定要将 %s 从 Lv.%d 升级到 Lv.%d 吗？" % [unit_name, current_level, current_level + 1]
+	dialog.confirm_text = "升级 (%d 金币)" % cost
+	dialog.cancel_text = "取消"
+	dialog.price_info = "💰 %d" % cost
+	dialog.confirmed.connect(_execute_upgrade.bind(unit_id, cost))
+	dialog.cancelled.connect(_on_upgrade_cancelled)
+	add_child(dialog)
+
+
+## 执行升级
+func _execute_upgrade(unit_id: String, cost: int) -> void:
 	# 执行升级
 	var result = SaveManager.try_upgrade_unit(unit_id, cost)
 
 	if not result[0]:
 		SoundManager.play_sfx(SoundManager.SFX.PURCHASE_FAIL)
+		if ErrorManager != null:
+			ErrorManager.report_purchase_failed(result[1], "unit_id: %s" % unit_id)
 		purchase_failed.emit(result[1])
 		return
 
@@ -596,6 +649,12 @@ func _on_upgrade_pressed(unit_id: String, cost: int) -> void:
 	_populate_unit_list()
 
 	print("升级成功: %s" % unit_id)
+
+
+## 升级取消
+func _on_upgrade_cancelled() -> void:
+	# 用户取消了升级，无需额外操作
+	pass
 
 
 ## 显示升级特效

@@ -31,6 +31,7 @@ DailyMissionManager="*res://src/autoload/daily_mission_manager.gd"
 SceneTransition="*res://src/autoload/scene_transition.gd"
 ParticleEffects="*res://src/autoload/particle_effects.gd"
 SoundManager="*res://src/autoload/sound_manager.gd"
+ErrorManager="*res://src/autoload/error_manager.gd"
 
 [display]
 

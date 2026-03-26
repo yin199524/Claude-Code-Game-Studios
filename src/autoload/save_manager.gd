@@ -54,6 +54,7 @@ func load_game() -> bool:
 		var result = player_data.validate()
 		if not result[0]:
 			push_warning("存档数据验证警告: " + result[1])
+			# 数据有警告但不影响使用
 		# 更新游玩时间
 		player_data.update_play_time()
 		data_loaded.emit()
@@ -62,10 +63,15 @@ func load_game() -> bool:
 		# 主存档损坏，尝试备份
 		push_warning("主存档文件损坏")
 		if _try_load_backup():
+			# 备份恢复成功，提示用户
+			if ErrorManager != null:
+				ErrorManager.report_save_corrupted("主存档损坏，已从备份恢复")
 			data_loaded.emit()
 			return true
 		# 创建新存档
 		push_warning("无法恢复备份，创建新存档")
+		if ErrorManager != null:
+			ErrorManager.report_save_corrupted("无法恢复备份，已创建新存档")
 		create_new_save()
 		data_loaded.emit()
 		return false
@@ -94,6 +100,9 @@ func save_game() -> bool:
 	if player_data == null:
 		return false
 
+	# 先保存到备份
+	_save_backup()
+
 	# 更新游玩时间
 	player_data.update_play_time()
 
@@ -102,7 +111,17 @@ func save_game() -> bool:
 		return true
 	else:
 		push_error("保存失败: " + str(result))
+		# 报告错误
+		if ErrorManager != null:
+			ErrorManager.report_save_failed("Error code: %d" % result)
 		return false
+
+
+## 保存备份
+func _save_backup() -> void:
+	if player_data == null:
+		return
+	ResourceSaver.save(player_data, BACKUP_PATH)
 
 
 ## 添加金币
@@ -243,6 +262,25 @@ func reset_save() -> void:
 	player_data.reset()
 	data_changed.emit()
 	save_game()
+
+
+## 重置存档（带加载指示器）
+## parent: 用于显示加载指示器的父节点
+func reset_save_with_indicator(parent: Node) -> void:
+	# 显示加载指示器
+	var indicator = preload("res://scenes/notification/loading_indicator.tscn").instantiate()
+	indicator.setup("重置存档...", false)
+	parent.add_child(indicator)
+	indicator.show_indicator()
+
+	# 执行重置
+	await get_tree().create_timer(0.3).timeout  # 让用户看到加载提示
+	player_data.reset()
+	data_changed.emit()
+	save_game()
+
+	# 隐藏加载指示器
+	indicator.hide_indicator()
 
 
 ## 获取设置

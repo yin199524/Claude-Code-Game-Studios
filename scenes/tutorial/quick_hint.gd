@@ -74,7 +74,24 @@ func show_counter_hint() -> void:
 
 ## 显示协同提示
 func show_synergy_hint(synergy_name: String) -> void:
-	show_hint("✨ 协同触发！%s" % synergy_name, Color(0.5, 1, 0.8), 2.5)
+	# 尝试获取协同效果详情
+	var synergy_manager = SynergyManager.new()
+	var synergy_effect = null
+
+	var all_synergies = synergy_manager.get_all_synergies()
+	for synergy in all_synergies:
+		if synergy.display_name == synergy_name:
+			synergy_effect = synergy
+			break
+
+	# 如果找到协同效果，显示详细信息
+	if synergy_effect:
+		var bonus_text = ""
+		if synergy_effect.bonus_value > 0:
+			bonus_text = " (+%.0f%%)" % (synergy_effect.bonus_value * 100)
+		show_hint("✨ 协同触发！%s%s" % [synergy_name, bonus_text], Color(0.5, 1, 0.8), 2.5)
+	else:
+		show_hint("✨ 协同触发！%s" % synergy_name, Color(0.5, 1, 0.8), 2.5)
 
 
 ## 创建快速提示组件（静态方法）

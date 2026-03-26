@@ -167,17 +167,13 @@ func _create_step_dot(index: int) -> Control:
 
 
 func _setup_button_style(button: Button, bg_color: Color) -> void:
-	var style = StyleBoxFlat.new()
-	style.bg_color = bg_color
-	style.border_color = bg_color.lightened(0.2)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	button.add_theme_stylebox_override("normal", style)
-
-	var hover_style = style.duplicate()
-	hover_style.bg_color = bg_color.lightened(0.15)
-	hover_style.border_color = bg_color.lightened(0.3)
-	button.add_theme_stylebox_override("hover", hover_style)
+	# 使用统一的按钮样式
+	if bg_color.r < 0.3 and bg_color.g > 0.4:  # 绿色调
+		ButtonStyles.apply_success(button)
+	elif bg_color.r < 0.3 and bg_color.b > 0.4:  # 蓝色调
+		ButtonStyles.apply_primary(button)
+	else:
+		ButtonStyles.apply_secondary(button)
 
 
 func _show_step(index: int) -> void:
@@ -227,8 +223,26 @@ func _on_next_pressed() -> void:
 
 func _on_skip_pressed() -> void:
 	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
+	# 显示跳过确认对话框
+	var dialog = preload("res://scenes/dialog/confirm_dialog.tscn").instantiate()
+	dialog.dialog_title = "跳过引导"
+	dialog.dialog_message = "确定要跳过新手引导吗？\n你可以在设置中重新开启引导。"
+	dialog.confirm_text = "跳过"
+	dialog.cancel_text = "取消"
+	dialog.is_dangerous = false
+	dialog.confirmed.connect(_execute_skip)
+	dialog.cancelled.connect(_on_skip_cancelled)
+	add_child(dialog)
+
+
+func _execute_skip() -> void:
 	TutorialManager.skip_tutorial()
 	_complete_welcome()
+
+
+func _on_skip_cancelled() -> void:
+	# 用户取消跳过，继续引导
+	pass
 
 
 func _on_start_pressed() -> void:

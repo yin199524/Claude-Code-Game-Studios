@@ -129,6 +129,7 @@ func _create_top_bar() -> void:
 	var mission_btn = Button.new()
 	mission_btn.text = "📋 任务"
 	mission_btn.custom_minimum_size = Vector2(80, 36)
+	ButtonStyles.apply_secondary(mission_btn)
 	mission_btn.pressed.connect(_on_mission_pressed)
 	hbox.add_child(mission_btn)
 
@@ -136,8 +137,17 @@ func _create_top_bar() -> void:
 	var achievement_btn = Button.new()
 	achievement_btn.text = "🏆 成就"
 	achievement_btn.custom_minimum_size = Vector2(80, 36)
+	ButtonStyles.apply_secondary(achievement_btn)
 	achievement_btn.pressed.connect(_on_achievement_pressed)
 	hbox.add_child(achievement_btn)
+
+	# 统计按钮
+	var stats_btn = Button.new()
+	stats_btn.text = "📊 统计"
+	stats_btn.custom_minimum_size = Vector2(80, 36)
+	ButtonStyles.apply_secondary(stats_btn)
+	stats_btn.pressed.connect(_on_stats_pressed)
+	hbox.add_child(stats_btn)
 
 	# 右侧边距
 	var right_spacer = Control.new()
@@ -177,6 +187,17 @@ func _on_settings_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
+	var dialog = preload("res://scenes/dialog/confirm_dialog.tscn").instantiate()
+	dialog.dialog_title = "退出游戏"
+	dialog.dialog_message = "确定要退出游戏吗？"
+	dialog.confirm_text = "退出"
+	dialog.cancel_text = "取消"
+	dialog.is_dangerous = true
+	dialog.confirmed.connect(_execute_quit)
+	add_child(dialog)
+
+
+func _execute_quit() -> void:
 	get_tree().quit()
 
 
@@ -188,6 +209,17 @@ func _on_achievement_pressed() -> void:
 func _on_mission_pressed() -> void:
 	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
 	SceneTransition.change_scene("res://scenes/daily_mission/daily_mission_panel.tscn")
+
+
+func _on_stats_pressed() -> void:
+	SoundManager.play_sfx(SoundManager.SFX.BUTTON_CLICK)
+	var panel = preload("res://scenes/statistics/statistics_panel.tscn").instantiate()
+	panel.close_requested.connect(_on_stats_closed.bind(panel))
+	add_child(panel)
+
+
+func _on_stats_closed(panel: Control) -> void:
+	panel.queue_free()
 
 
 ## 创建引导提示组件

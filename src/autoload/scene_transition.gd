@@ -59,10 +59,18 @@ static func change_scene(scene_path: String, duration: float = FADE_DURATION) ->
 		SceneTree.change_scene_to_file(scene_path)
 		return
 
+	# 显示加载指示器
+	var tree = instance.get_tree()
+	if tree and tree.root:
+		show_loading(tree.root, "加载场景...")
+
 	await instance.fade_out(duration)
 	instance.get_tree().change_scene_to_file(scene_path)
 	await instance.get_tree().create_timer(0.05).timeout
 	await instance.fade_in(duration)
+
+	# 隐藏加载指示器
+	hide_loading()
 
 
 ## 静态方法：直接切换场景（兼容旧代码）
@@ -201,52 +209,10 @@ static func show_loading(parent: Node, message: String = "加载中...") -> void
 	if loading_indicator != null:
 		return
 
-	loading_indicator = Control.new()
-	loading_indicator.set_anchors_preset(Control.PRESET_FULL_RECT)
-	loading_indicator.z_index = 500
+	loading_indicator = preload("res://scenes/notification/loading_indicator.tscn").instantiate()
+	loading_indicator.setup(message, false)
 	parent.add_child(loading_indicator)
-
-	# 半透明背景
-	var bg = ColorRect.new()
-	bg.color = Color(0, 0, 0, 0.5)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	loading_indicator.add_child(bg)
-
-	# 加载容器
-	var container = PanelContainer.new()
-	container.set_anchors_preset(Control.PRESET_CENTER)
-	container.position = Vector2(-100, -40)
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.18, 0.25, 0.95)
-	style.border_color = Color(0.4, 0.5, 0.7, 1)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(10)
-	container.add_theme_stylebox_override("panel", style)
-	loading_indicator.add_child(container)
-
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	container.add_child(vbox)
-
-	# 加载图标（旋转动画）
-	var spinner = Label.new()
-	spinner.text = "⏳"
-	spinner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	spinner.add_theme_font_size_override("font_size", 32)
-	vbox.add_child(spinner)
-
-	# 加载文本
-	var label = Label.new()
-	label.text = message
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 16)
-	label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
-	vbox.add_child(label)
-
-	# 旋转动画
-	var tween = parent.create_tween()
-	tween.set_loops()
-	tween.tween_property(spinner, "rotation", PI * 2, 1.0)
+	loading_indicator.show_indicator()
 
 
 ## 隐藏加载指示器
@@ -254,8 +220,26 @@ static func hide_loading() -> void:
 	if loading_indicator == null:
 		return
 
-	loading_indicator.queue_free()
+	loading_indicator.hide_indicator()
 	loading_indicator = null
+
+
+## 显示带进度的加载指示器
+static func show_loading_with_progress(parent: Node, message: String = "加载中...") -> Control:
+	if loading_indicator != null:
+		return loading_indicator
+
+	loading_indicator = preload("res://scenes/notification/loading_indicator.tscn").instantiate()
+	loading_indicator.setup(message, true)
+	parent.add_child(loading_indicator)
+	loading_indicator.show_indicator()
+	return loading_indicator
+
+
+## 更新加载进度
+static func update_progress(progress: float) -> void:
+	if loading_indicator != null and loading_indicator.has_method("set_progress"):
+		loading_indicator.set_progress(progress)
 
 
 ## 显示确认对话框
